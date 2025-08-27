@@ -1,4 +1,4 @@
-# @wakeuplabs/op-ping-sdk — Technical Interface
+# @wakeuplabs/op-interop-alerts-sdk — Technical Research
 
 ## Purpose
 
@@ -14,7 +14,7 @@ Route: canonical OP Stack messenger only (no fast/third-party relayers).
 
 ```typescript
 import { base, optimism } from "viem/chains";
-import { messagePing } from "@wakeuplabs/op-ping-sdk";
+import { messagePing } from "@wakeuplabs/op-interop-alerts-sdk";
 // we will need a PK with balance in base and optimism
 while (true) {
   const result = await messagePing(base, optimism, process.env.PRIVATE_KEY!);
