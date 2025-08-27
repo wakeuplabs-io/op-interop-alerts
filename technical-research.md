@@ -2,13 +2,9 @@
 
 ## Purpose
 
-We plan to build an SDK to send a cross-chain "ping" between Optimism and Base using the canonical L2CrossDomainMessenger at 0x4200000000000000000000000000000000000007 (same on all OP Stack L2s).
+We aim to build a Crosschain Alert Monitoring Tool delivered as a TypeScript SDK to track and monitor interoperability messages across Superchain blockchains. At its core, the SDK will send lightweight cross-chain “pings” between Optimism and Base using the canonical L2CrossDomainMessenger (0x4200000000000000000000000000000000000007, the same across all OP Stack L2s). Each ping will report whether delivery succeeded, failed, or timed out, along with precise timing information.
 
-The SDK would return whether delivery succeeded, failed, or timed out, plus timing information.
-
-Under the hood, it would use viem + @eth-optimism/viem.
-
-Route: canonical OP Stack messenger only (no fast/third-party relayers).
+By relying solely on the canonical OP Stack messenger (no fast or third-party relayers) and leveraging viem + @eth-optimism/viem under the hood, the tool ensures a deterministic and reliable measurement of cross-chain health. These results become the foundation for real-time metrics and alerts, enabling developers and operators to detect issues early and gain clear visibility into the state of cross-chain communication across the Superchain.
 
 ## Usage (recommended loop)
 
