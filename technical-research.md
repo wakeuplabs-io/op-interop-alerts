@@ -6,6 +6,36 @@ We aim to build a Crosschain Alert Monitoring Tool delivered as a TypeScript SDK
 
 By relying solely on the canonical OP Stack messenger (no fast or third-party relayers) and leveraging viem + @eth-optimism/viem under the hood, the tool ensures a deterministic and reliable measurement of cross-chain health. These results become the foundation for real-time metrics and alerts, enabling developers and operators to detect issues early and gain clear visibility into the state of cross-chain communication across the Superchain.
 
+## Ping Procedure and Rationale  
+
+To ensure full visibility into the health of cross-chain communication, we implement a procedure of **synthetic pings** between chains (Optimism ↔ Base) using the **canonical L2CrossDomainMessenger**.  
+
+### How the procedure works  
+1. **Minimal payload construction**  
+   - A trivial message is sent from the origin chain via `sendMessage` of the canonical messenger.  
+2. **Initial confirmation**  
+   - Wait for 1 confirmation on the origin chain and derive a `messageHash` to correlate the event on the destination chain.  
+3. **Destination monitoring**  
+   - Observe the messenger on the receiving chain for:  
+     - `RelayedMessage` → success.  
+     - `FailedRelayedMessage` → execution failure.  
+4. **Controlled timeout**  
+   - If neither event is observed within a defined period (15 minutes by default), the ping is marked as `timeout`.  
+5. **Latency and status metrics**  
+   - Measure both wall-clock duration (`wallClockMs`) and on-chain observed timing (`chainObservedSeconds`).  
+   - Store results with status (`success | fail | timeout`), hashes, and minimal traceability data.  
+
+### Why we do it this way  
+While it would be possible to simply **listen to existing application messages** and check whether they arrive, that approach leaves us dependent on external activity and gives us less control over the process. Instead, synthetic pings offer clear advantages:  
+
+- **Complete control (100%)**: by generating our own pings, we have certainty over every message sent and received.  
+- **Resilience**: monitoring does not depend on third-party transactions; we maintain a synthetic “heartbeat” across chains.  
+- **Determinism**: measurements always follow the canonical OP Stack path, avoiding external relayers or alternative routes.  
+- **Consistent metrics**: success/failure rates and latencies can be calculated uniformly, providing a solid basis for monitoring.  
+- **Proactive alerts**: rather than discovering issues only when user messages fail, we can detect degradation in real time.  
+
+In short, this ping-based approach establishes an **independent and reliable baseline** for evaluating the health of cross-chain interoperability, while remaining easy to repeat at fixed intervals (~10 minutes) and fully compatible with the canonical messenger once it becomes enabled on mainnet.  
+
 ## Usage (recommended loop)
 
 ```typescript
