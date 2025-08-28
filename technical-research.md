@@ -8,7 +8,7 @@ By relying solely on the canonical OP Stack messenger (no fast or third-party re
 
 ## Ping Procedure and Rationale  
 
-To ensure full visibility into the health of cross-chain communication, we implement a procedure of **synthetic pings** between chains (Optimism ↔ Base) using the **canonical L2CrossDomainMessenger**.  
+To ensure full visibility into the health of cross-chain communication, we implement a procedure of **synthetic pings** between chains (e.g.: Optimism ↔ Base) using the **canonical L2CrossDomainMessenger**.  
 
 ### How the procedure works  
 1. **Minimal payload construction**  
