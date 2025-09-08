@@ -1,0 +1,29 @@
+{
+  "name": "@op-interop-alerts/example",
+  "version": "1.0.0",
+  "description": "Example usage of the OP Interop Alerts SDK",
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "start": "npm run build && node dist/index.js",
+    "dev": "tsx watch src/index.ts"
+  },
+  "dependencies": {
+    "@wakeuplabs/op-interop-alerts-sdk": "file:../sdk",
+    "dotenv": "^16.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "@types/node": "^20.0.0",
+    "tsx": "^4.0.0"
+  },
+  "keywords": [
+    "optimism",
+    "interop",
+    "alerts",
+    "example"
+  ],
+  "author": "",
+  "license": "MIT"
+}

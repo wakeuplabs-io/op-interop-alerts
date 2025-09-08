@@ -9,6 +9,10 @@ export async function startTracking (chainsInfo: ChainsInfo, pksInfo: PKsInfo, i
         const result = await sendPing(chainsInfo, pksInfo);
         await waitForRelayedMessage(chainsInfo, result.sentMessageSender, result.sentMessagePayload);
 
+        console.log('');
+        console.log("=== 🔄 Waiting for next tracking cycle ===");
+        console.log('');
+
         await wait(intervalMinutes * MINUTE);
     }
 }

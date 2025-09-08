@@ -1,4 +1,4 @@
-import { createPublicClient } from "viem/_types/clients/createPublicClient";
+import { createPublicClient } from "viem";
 import { ChainsInfo } from "../config";
 import { hardhat as hardhatChain } from "viem/chains";
 import { Address, encodeAbiParameters, http, keccak256, Log, parseAbiParameters, parseEventLogs } from "viem";
@@ -6,7 +6,7 @@ import { l2ToL2CrossDomainMessengerAbi } from "../abis/generated";
 
 export async function waitForRelayedMessage(chainsInfo: ChainsInfo, expectedSender: string, expectedMessagePayload: `0x${string}`) : Promise<number> {
     return new Promise((resolve, reject) => {
-        console.log("=== 🔍 Waiting for Relayed Message ===");
+        console.log("\n=== 🔍 Waiting for Relayed Message ===");
 
         const publicDestination = createPublicClient({
             chain: { ...hardhatChain, id: chainsInfo.chainDestination.chainId },
