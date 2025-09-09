@@ -13,38 +13,44 @@ This is a TypeScript example package that demonstrates how to use the `@wakeupla
 ## Setup
 
 1. Install dependencies:
+
    ```bash
    npm install
    ```
 
 2. Set up environment variables:
+
    ```bash
    cp env.example .env
    ```
 
 3. Edit the `.env` file with your configuration:
+
    ```bash
    # Required: Add your private keys
    ORIGIN_PRIVATE_KEY=0x...
    DESTINATION_PRIVATE_KEY=0x...
    
-    # Tracking Configuration (Optional)
-    TRACKING_INTERVAL_MINUTES=10
+   # Tracking Configuration (Optional)
+   TRACKING_INTERVAL_MINUTES=10
    ```
 
 ## Usage
 
-### Build and run:
+### Build and run
+
 ```bash
 npm start
 ```
 
-### Development mode with auto-rebuild:
+### Development mode with auto-rebuild
+
 ```bash
 npm run dev
 ```
 
-### Build only:
+### Build only
+
 ```bash
 npm run build
 ```
@@ -52,15 +58,18 @@ npm run build
 ## Environment Variables
 
 ### Required
+
 - `ORIGIN_PRIVATE_KEY`: Private key for the origin chain account
 - `DESTINATION_PRIVATE_KEY`: Private key for the destination chain account
 
 ### Optional (with defaults)
+
 - `TRACKING_INTERVAL_MINUTES`: Minutes between tracking cycles (default: 10)
 
 ## Security
 
 ⚠️ **Important Security Notes:**
+
 - Never commit your `.env` file to version control
 - The example private keys in `env.example` are for testing only
 - Use secure, unique private keys for production environments
@@ -69,6 +78,7 @@ npm run build
 ## What it does
 
 The tracking process:
+
 1. Loads configuration from environment variables
 2. Validates required private keys are present
 3. Sends a ping message from the origin chain to the destination chain

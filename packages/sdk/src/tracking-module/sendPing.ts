@@ -3,6 +3,7 @@ import { ChainsInfo, PKsInfo } from "../config";
 import { hardhat as hardhatChain } from "viem/chains";
 import { privateKeyToAccount } from "viem/accounts";
 import { l2ToL2CrossDomainMessengerAbi, messageReceiverAbi } from "../abis/generated";
+import { SentMessageEventData } from "./startTracking";
 
 const messageToSend = "ping";
 
@@ -48,10 +49,31 @@ export async function sendPing (chainsInfo: ChainsInfo, pksInfo: PKsInfo) {
 
   console.log(`🔥 Message sent! Tx hash: ${sendTxHash}`);
 
+  // Obtener el timestamp del bloque
+  const block = await publicOrigin.getBlock({ blockHash: sendMessageReceipt.blockHash });
+
+  // Encontrar el evento SentMessage específico
+  const sentMessageEvent = sendMessageLogs.find((log) => log.eventName === "SentMessage");
+
+  if (!sentMessageEvent) {
+    throw new Error("SentMessage event not found in transaction logs");
+  }
+
+  // Crear SentMessageEventData para el callback
+  const eventData: SentMessageEventData = {
+    event: sentMessageEvent,
+    logs: sendMessageLogs,
+    gasUsed: sendMessageReceipt.gasUsed,
+    timestamp: new Date(Number(block.timestamp) * 1000),
+    localTimestamp: new Date(),
+    transactionHash: sendTxHash
+  };
+
   return {
     sendTxHash,
     sentMessageNonce,
     sentMessageSender,
     sentMessagePayload: calldata,
+    eventData,
   };
 }

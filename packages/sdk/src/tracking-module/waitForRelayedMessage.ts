@@ -3,9 +3,10 @@ import { ChainsInfo } from "../config";
 import { hardhat as hardhatChain } from "viem/chains";
 import { Address, encodeAbiParameters, http, keccak256, Log, parseAbiParameters, parseEventLogs } from "viem";
 import { l2ToL2CrossDomainMessengerAbi } from "../abis/generated";
+import { RelayedMessageEventData } from "./startTracking";
 
-export async function waitForRelayedMessage(chainsInfo: ChainsInfo, expectedSender: string, expectedMessagePayload: `0x${string}`) : Promise<number> {
-    return new Promise((resolve, reject) => {
+export async function waitForRelayedMessage(chainsInfo: ChainsInfo, expectedSender: string, expectedMessagePayload: `0x${string}`) : Promise<{ eventData: RelayedMessageEventData }> {
+    return new Promise(async (resolve, reject) => {
         console.log("\n=== 🔍 Waiting for Relayed Message ===");
 
         const publicDestination = createPublicClient({
@@ -17,7 +18,7 @@ export async function waitForRelayedMessage(chainsInfo: ChainsInfo, expectedSend
             address: chainsInfo.chainDestination.l2CrossDomainMessenger,
             abi: l2ToL2CrossDomainMessengerAbi,
             eventName: 'RelayedMessage',
-            onLogs: (logs: Log[]) => {
+            onLogs: async (logs: Log[]) => {
                 const logsParsed = parseEventLogs({
                     abi: l2ToL2CrossDomainMessengerAbi,
                     logs: logs,
@@ -45,8 +46,26 @@ export async function waitForRelayedMessage(chainsInfo: ChainsInfo, expectedSend
                     console.log("   - Source Chain ID:", source.toString());
                     console.log("   - Message Nonce:", messageNonce.toString());
                     console.log("   - Message Hash:", messageHash);
+
+                    // Obtener información de la transacción para el callback
+                    const txReceipt = await publicDestination.getTransactionReceipt({ 
+                        hash: logsParsed[0].transactionHash 
+                    });
+                    const block = await publicDestination.getBlock({ 
+                        blockHash: txReceipt.blockHash 
+                    });
+
+                    const eventData: RelayedMessageEventData = {
+                        event: relayedMessage,
+                        logs: logsParsed,
+                        gasUsed: txReceipt.gasUsed,
+                        timestamp: new Date(Number(block.timestamp) * 1000),
+                        localTimestamp: new Date(),
+                        transactionHash: logsParsed[0].transactionHash
+                    };
+
                     unwatch();
-                    resolve(0); // Success
+                    resolve({ eventData });
                 }
             },
             onError: (error: Error) => {
