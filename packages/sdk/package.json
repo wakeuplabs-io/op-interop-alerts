@@ -1,6 +1,6 @@
 {
   "name": "@wakeuplabs/op-interop-alerts-sdk",
-  "version": "0.1.3",
+  "version": "0.1.6",
   "description": "TypeScript SDK for monitoring cross-chain interoperability across Optimism Superchain",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -43,9 +43,11 @@
   ],
   "author": "WakeUp Labs",
   "license": "MIT",
+  "homepage": "https://github.com/wakeuplabs-io/op-interop-alerts#readme",
   "repository": {
     "type": "git",
-    "url": "https://github.com/wakeuplabs/op-interop-alerts.git",
+    "url": "git+https://github.com/wakeuplabs-io/op-interop-alerts.git",
+    "branch": "develop",
     "directory": "packages/sdk"
   },
   "dependencies": {
