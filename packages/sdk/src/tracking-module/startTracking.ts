@@ -4,7 +4,7 @@ import { waitForRelayedMessage } from "./waitForRelayedMessage";
 import { Log, GetContractEventsReturnType, ParseEventLogsReturnType } from "viem";
 import { l2ToL2CrossDomainMessengerAbi } from "../abis/generated";
 
-// Tipos específicos para eventos del L2ToL2CrossDomainMessenger
+// Specific types for L2ToL2CrossDomainMessenger events
 export type SentMessageEvent = GetContractEventsReturnType<
     typeof l2ToL2CrossDomainMessengerAbi,
     'SentMessage'
@@ -42,7 +42,7 @@ export interface TrackingCallbackData {
     relayMessage: RelayedMessageEventData;
 }
 
-// Mantener EventData para compatibilidad hacia atrás
+// Keep EventData for backward compatibility
 export interface EventData {
     logs: Log[];
     gasUsed: bigint;

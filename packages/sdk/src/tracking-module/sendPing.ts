@@ -49,10 +49,10 @@ export async function sendPing (chainsInfo: ChainsInfo, pksInfo: PKsInfo) {
 
   console.log(`🔥 Message sent! Tx hash: ${sendTxHash}`);
 
-  // Obtener el timestamp del bloque
+  // Get the block timestamp
   const block = await publicOrigin.getBlock({ blockHash: sendMessageReceipt.blockHash });
 
-  // Encontrar el evento SentMessage específico
+  // Find the specific SentMessage event
   const sentMessageEvent = sendMessageLogs.find((log) => log.eventName === "SentMessage");
 
   if (!sentMessageEvent) {

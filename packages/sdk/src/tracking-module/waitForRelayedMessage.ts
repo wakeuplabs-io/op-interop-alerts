@@ -47,7 +47,7 @@ export async function waitForRelayedMessage(chainsInfo: ChainsInfo, expectedSend
                     console.log("   - Message Nonce:", messageNonce.toString());
                     console.log("   - Message Hash:", messageHash);
 
-                    // Obtener información de la transacción para el callback
+                    // Get transaction information for the callback
                     const txReceipt = await publicDestination.getTransactionReceipt({ 
                         hash: logsParsed[0].transactionHash 
                     });

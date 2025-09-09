@@ -40,9 +40,10 @@ const trackingCallback = (data: TrackingCallbackData) => {
     console.log('\n🚀 SentMessage Event:');
     console.log(`   - Transaction Hash: ${data.sentMessage.transactionHash}`);
     console.log(`   - Gas Used: ${data.sentMessage.gasUsed.toString()}`);
-    console.log(`   - Timestamp: ${data.sentMessage.timestamp.toISOString()}`);
+    console.log(`   - Blockchain Timestamp: ${data.sentMessage.timestamp.toISOString()}`);
+    console.log(`   - Local Timestamp: ${data.sentMessage.localTimestamp.toISOString()}`);
     console.log(`   - Logs Count: ${data.sentMessage.logs.length}`);
-    // Ahora podemos acceder a los datos específicos del evento con tipos seguros
+    // Now we can access specific event data with type safety
     console.log(`   - Event Args:`);
     console.log(`     • Destination: ${data.sentMessage.event.args.destination?.toString() ?? 'N/A'}`);
     console.log(`     • Target: ${data.sentMessage.event.args.target ?? 'N/A'}`);
@@ -52,9 +53,10 @@ const trackingCallback = (data: TrackingCallbackData) => {
     console.log('\n📨 RelayMessage Event:');
     console.log(`   - Transaction Hash: ${data.relayMessage.transactionHash}`);
     console.log(`   - Gas Used: ${data.relayMessage.gasUsed.toString()}`);
-    console.log(`   - Timestamp: ${data.relayMessage.timestamp.toISOString()}`);
+    console.log(`   - Blockchain Timestamp: ${data.relayMessage.timestamp.toISOString()}`);
+    console.log(`   - Local Timestamp: ${data.relayMessage.localTimestamp.toISOString()}`);
     console.log(`   - Logs Count: ${data.relayMessage.logs.length}`);
-    // Ahora podemos acceder a los datos específicos del evento con tipos seguros
+    // Now we can access specific event data with type safety
     console.log(`   - Event Args:`);
     console.log(`     • Source: ${data.relayMessage.event.args.source?.toString() ?? 'N/A'}`);
     console.log(`     • Message Nonce: ${data.relayMessage.event.args.messageNonce?.toString() ?? 'N/A'}`);
