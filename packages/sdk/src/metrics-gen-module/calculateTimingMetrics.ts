@@ -24,6 +24,7 @@ export interface MetricsConfig {
     maxHealthyFailureRateThreshold: number;
     criticalFailureRateThreshold: number;
     consecutiveFailureThreshold: number;
+    maxTrackingDataEntries: number;
 }
 
 export function calculateTimingMetrics(successfulData: TrackingResult[], config: MetricsConfig): TimingMetrics {

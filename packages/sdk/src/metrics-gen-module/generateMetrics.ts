@@ -31,7 +31,8 @@ const DEFAULT_CONFIG: MetricsConfig = {
     criticalLatencyMs: 120000, // 2 minutes
     maxHealthyFailureRateThreshold: 5, // 5% - above this is degraded
     criticalFailureRateThreshold: 20, // 20% - above this is critical
-    consecutiveFailureThreshold: 5 // 5 consecutive failures before system is down
+    consecutiveFailureThreshold: 5, // 5 consecutive failures before system is down
+    maxTrackingDataEntries: 100 // 100 tracking data entries to keep
 };
 
 export function generateMetrics(
@@ -43,7 +44,7 @@ export function generateMetrics(
     }
 
     // Keep only the last 100 tracking data entries
-    const limitedTrackingData = trackingData.slice(-100);
+    const limitedTrackingData = trackingData.slice(-config.maxTrackingDataEntries);
 
     const successfulData = limitedTrackingData.filter(d => d.success && d.data);
     
