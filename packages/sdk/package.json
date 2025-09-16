@@ -1,6 +1,6 @@
 {
   "name": "@wakeuplabs/op-interop-alerts-sdk",
-  "version": "0.1.7",
+  "version": "0.2.0",
   "description": "TypeScript SDK for monitoring cross-chain interoperability across Optimism Superchain",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -54,16 +54,16 @@
     "viem": "2.37.3"
   },
   "devDependencies": {
-    "@types/jest": "^29.0.0",
-    "@typescript-eslint/eslint-plugin": "^6.0.0",
-    "@typescript-eslint/parser": "^6.0.0",
+    "@types/jest": "29.0.0",
+    "@typescript-eslint/eslint-plugin": "6.0.0",
+    "@typescript-eslint/parser": "6.0.0",
     "@wagmi/cli": "2.5.1",
-    "eslint": "^8.0.0",
-    "jest": "^29.0.0",
-    "rimraf": "^5.0.0",
-    "ts-jest": "^29.0.0",
-    "tsup": "^8.0.0",
-    "typescript": "^5.0.0"
+    "eslint": "8.0.0",
+    "jest": "29.0.0",
+    "rimraf": "5.0.0",
+    "ts-jest": "29.0.0",
+    "tsup": "8.0.0",
+    "typescript": "5.0.0"
   },
   "peerDependencies": {
     "typescript": ">=5.0.0"
