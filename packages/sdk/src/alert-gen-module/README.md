@@ -10,7 +10,6 @@ The alert generation module provides a comprehensive system for creating and man
 - **Rate Limiting**: Prevents alert spam
 - **Complete History**: Tracks all alerts and notifications
 - **Detailed Statistics**: Metrics about alert system performance
-- **Full TypeScript**: Strict typing without any usage
 
 ## Main Functions
 
@@ -73,15 +72,6 @@ The module defines comprehensive types for alerts, rules, conditions, notificati
 - HIGH: High priority alerts
 - CRITICAL: Critical priority alerts
 
-## Notification Channels
-
-- EMAIL: Email notifications
-- SLACK: Slack notifications
-- SMS: SMS notifications
-- WEBHOOK: Webhook notifications
-- DISCORD: Discord notifications
-- TELEGRAM: Telegram notifications
-
 ## Predefined Rules
 
 The module includes predefined rules for common scenarios:
@@ -93,9 +83,3 @@ The module includes predefined rules for common scenarios:
 - Consecutive failure detection
 - High gas usage alerts
 - Severe timing delay alerts
-
-## Usage Pattern
-
-The module follows the same functional pattern as other modules in the SDK. Import the required functions and types, configure your rules and notification callbacks, then process alerts based on your metrics data.
-
-All functions are pure and stateless where possible, with minimal internal state management for duration tracking and cooldowns.
