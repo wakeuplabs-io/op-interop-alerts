@@ -43,7 +43,72 @@ import type {
 
 import { hasConsecutiveFailures, getConsecutiveFailureCount, percentile } from "./utils";
 
-export { startTracking, sendPing, waitForRelayedMessage, generateMetrics, hasConsecutiveFailures, getConsecutiveFailureCount, percentile };
+// Alert generation module
+import { 
+    processAlerts,
+    evaluateRule,
+    evaluateCondition,
+    createAlert,
+    createAlertContext,
+    createSimpleNotificationCallback,
+    isInCooldown,
+    setCooldown,
+    checkDurationCondition,
+    cleanupConditionStates,
+    cleanupCooldowns
+} from "./alert-gen-module/processAlerts";
+import { 
+    validateAlertRule, 
+    createRuleFromTemplate, 
+    createAlertRule,
+    DEFAULT_ALERT_RULES, 
+    ALERT_RULE_TEMPLATES 
+} from "./alert-gen-module/alertRules";
+import type {
+    Alert,
+    AlertContext,
+    AlertRule,
+    AlertRuleCondition,
+    AlertRuleEvaluationResult,
+    AlertNotification,
+    AlertNotificationCallback,
+    AlertRuleTemplate
+} from "./alert-gen-module/types";
+import {
+    AlertSeverity,
+    AlertCategory,
+    NotificationChannel
+} from "./alert-gen-module/types";
+
+export { 
+    startTracking, 
+    sendPing, 
+    waitForRelayedMessage, 
+    generateMetrics, 
+    hasConsecutiveFailures, 
+    getConsecutiveFailureCount, 
+    percentile,
+    // Alert generation exports
+    processAlerts,
+    evaluateRule,
+    evaluateCondition,
+    createAlert,
+    createAlertContext,
+    createSimpleNotificationCallback,
+    isInCooldown,
+    setCooldown,
+    checkDurationCondition,
+    cleanupConditionStates,
+    cleanupCooldowns,
+    validateAlertRule,
+    createRuleFromTemplate,
+    createAlertRule,
+    DEFAULT_ALERT_RULES,
+    ALERT_RULE_TEMPLATES,
+    AlertSeverity,
+    AlertCategory,
+    NotificationChannel
+};
 export type { 
     EventData, 
     TrackingCallbackData, 
@@ -71,5 +136,14 @@ export type {
     TimingMetrics,
     HealthAlert,
     ErrorSummary,
-    MetricsConfig
+    MetricsConfig,
+    // Alert generation types
+    Alert,
+    AlertContext,
+    AlertRule,
+    AlertRuleCondition,
+    AlertRuleEvaluationResult,
+    AlertNotification,
+    AlertNotificationCallback,
+    AlertRuleTemplate
 };

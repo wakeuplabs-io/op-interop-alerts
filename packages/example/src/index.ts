@@ -1,4 +1,18 @@
-import { startTracking, TrackingResult, generateMetrics, InteropMetrics, hasConsecutiveFailures, getConsecutiveFailureCount } from '@wakeuplabs/op-interop-alerts-sdk';
+import { 
+    startTracking, 
+    TrackingResult, 
+    generateMetrics, 
+    InteropMetrics, 
+    hasConsecutiveFailures, 
+    getConsecutiveFailureCount,
+    // Alert generation imports
+    processAlerts,
+    createAlertContext,
+    createSimpleNotificationCallback,
+    DEFAULT_ALERT_RULES,
+    AlertNotification,
+    NotificationChannel
+} from '@wakeuplabs/op-interop-alerts-sdk';
 import { chainsInfoMock as chainsInfo } from '@wakeuplabs/op-interop-alerts-sdk/config';
 import { config } from 'dotenv';
 import { formatTimeDifference } from './utils';
@@ -12,6 +26,14 @@ const pksInfo = {
     destination: process.env.DESTINATION_PRIVATE_KEY as `0x${string}`,
 };
 
+// Slack configuration from environment variables
+const slackConfig = {
+    webhookUrl: process.env.SLACK_WEBHOOK_URL,
+    channel: process.env.SLACK_CHANNEL || '#alerts',
+    username: process.env.SLACK_USERNAME || 'OP Interop Alerts',
+    iconEmoji: process.env.SLACK_ICON_EMOJI || ':warning:'
+};
+
 // Validate required environment variables
 if (!pksInfo.origin) {
     console.error('❌ Error: ORIGIN_PRIVATE_KEY environment variable is required');
@@ -23,6 +45,12 @@ if (!pksInfo.destination) {
     process.exit(1);
 }
 
+// Validate Slack configuration
+if (!slackConfig.webhookUrl) {
+    console.warn('⚠️  Warning: No Slack webhook URL configured. Alerts will only be logged to console.');
+    console.warn('   Configure SLACK_WEBHOOK_URL to enable Slack notifications.');
+}
+
 // Interval in minutes between tracking cycles
 const intervalMinutes = parseInt(process.env.TRACKING_INTERVAL_MINUTES || "10");
 
@@ -30,11 +58,247 @@ const intervalMinutes = parseInt(process.env.TRACKING_INTERVAL_MINUTES || "10");
 const trackingResults: TrackingResult[] = [];
 const METRICS_THRESHOLD = 1;
 
+// Status reporting configuration
+const STATUS_REPORT_INTERVAL = 10; // Send status every 10 iterations
+let iterationCount = 0;
+const startTime = Date.now();
+
+// Slack notification functions
+async function sendSlackMessage(message: string, severity: string = 'info'): Promise<boolean> {
+    if (!slackConfig.webhookUrl) {
+        return false;
+    }
+    
+    const color = getSeverityColor(severity);
+    const emoji = getSeverityEmoji(severity);
+    
+    return await sendSlackWebhook(message, color, emoji);
+}
+
+async function sendSlackWebhook(message: string, color: string, emoji: string): Promise<boolean> {
+    try {
+        const payload = {
+            username: slackConfig.username,
+            icon_emoji: emoji,
+            channel: slackConfig.channel,
+            attachments: [{
+                color: color,
+                text: message,
+                ts: Math.floor(Date.now() / 1000)
+            }]
+        };
+
+        const response = await fetch(slackConfig.webhookUrl!, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+            console.error(`❌ Slack webhook error: ${response.status} ${response.statusText}`);
+            return false;
+        }
+
+        return true;
+    } catch (error) {
+        console.error('❌ Error sending Slack webhook:', error);
+        return false;
+    }
+}
+
+
+function getSeverityColor(severity: string): string {
+    switch (severity.toUpperCase()) {
+        case 'CRITICAL': return 'danger';
+        case 'HIGH': return 'warning';
+        case 'MEDIUM': return '#ff9500'; // Orange
+        case 'LOW': return 'good';
+        default: return '#36a64f'; // Green
+    }
+}
+
+function getSeverityEmoji(severity: string): string {
+    switch (severity.toUpperCase()) {
+        case 'CRITICAL': return ':rotating_light:';
+        case 'HIGH': return ':warning:';
+        case 'MEDIUM': return ':large_orange_diamond:';
+        case 'LOW': return ':information_source:';
+        default: return ':bell:';
+    }
+}
+
+// Create alert notification callback
+const alertNotificationCallback = createSimpleNotificationCallback({
+    [NotificationChannel.SLACK]: async (notification: AlertNotification) => {
+        const { alert, rule, context } = notification;
+        
+        console.log(`🚨 ALERT TRIGGERED: [${alert.severity}] ${alert.title}`);
+        
+        // Format alert message for Slack
+        const slackMessage = formatAlertForSlack(alert, rule, context);
+        
+        // Send to Slack
+        const success = await sendSlackMessage(slackMessage, alert.severity);
+        
+        if (success) {
+            console.log('✅ Alert sent to Slack successfully');
+        } else {
+            console.log('❌ Failed to send alert to Slack');
+        }
+    }
+});
+
+function formatAlertForSlack(alert: any, rule: any, context: any): string {
+    const timestamp = alert.timestamp.toISOString();
+    const duration = context.timeWindowMs / (60 * 1000); // Convert to minutes
+    
+    let message = `*🚨 ${alert.title}*\n`;
+    message += `*Severity:* ${alert.severity}\n`;
+    message += `*Category:* ${alert.category}\n`;
+    message += `*Time:* ${timestamp}\n`;
+    message += `*Message:* ${alert.message}\n`;
+    
+    // Add relevant metrics
+    if (alert.metadata?.metricsSnapshot) {
+        message += `\n*📊 Current Metrics:*\n`;
+        const metrics = alert.metadata.metricsSnapshot;
+        
+        if (metrics.interopStatus) {
+            message += `• Status: ${metrics.interopStatus}\n`;
+        }
+        if (metrics.healthLevel) {
+            message += `• Health: ${metrics.healthLevel}\n`;
+        }
+        
+        // Add specific metric values based on alert category
+        Object.entries(metrics).forEach(([key, value]) => {
+            if (key !== 'interopStatus' && key !== 'healthLevel' && key !== 'lastUpdateTimestamp') {
+                if (typeof value === 'number') {
+                    if (key.includes('latency') || key.includes('Ms')) {
+                        message += `• ${key}: ${(value / 1000).toFixed(2)}s\n`;
+                    } else if (key.includes('rate') || key.includes('Rate')) {
+                        message += `• ${key}: ${value.toFixed(1)}%\n`;
+                    } else {
+                        message += `• ${key}: ${value}\n`;
+                    }
+                } else {
+                    message += `• ${key}: ${value}\n`;
+                }
+            }
+        });
+    }
+    
+    message += `\n*⏱️ Data Window:* ${duration} minutes`;
+    
+    return message;
+}
+
+// Status report function
+async function sendStatusReport(metrics: InteropMetrics, iteration: number) {
+    const timestamp = new Date().toISOString();
+    const uptime = Math.floor((Date.now() - startTime) / 1000 / 60); // minutes
+    
+    let statusMessage = `*✅ OP Interop Status: OK*\n`;
+    statusMessage += `*Iteration:* ${iteration}\n`;
+    statusMessage += `*Time:* ${timestamp}\n`;
+    statusMessage += `*Uptime:* ${uptime} minutes\n\n`;
+    
+    statusMessage += `*📊 Current Status:*\n`;
+    statusMessage += `• Interop Status: ${metrics.status.interopStatus}\n`;
+    statusMessage += `• Health Level: ${metrics.status.healthLevel}\n`;
+    statusMessage += `• Timing Status: ${metrics.status.timingStatus}\n\n`;
+    
+    statusMessage += `*📈 Key Metrics:*\n`;
+    statusMessage += `• Success Rate: ${metrics.coreMetrics.throughput.successRate.toFixed(1)}%\n`;
+    statusMessage += `• Avg Latency: ${(metrics.coreMetrics.latency.averageLatencyMs / 1000).toFixed(1)}s\n`;
+    statusMessage += `• Total Messages: ${metrics.coreMetrics.throughput.totalMessages}\n`;
+    statusMessage += `• Error Rate: ${metrics.health.errorSummary.errorRate.toFixed(1)}%\n`;
+    
+    const success = await sendSlackMessage(statusMessage, 'good');
+    
+    if (success) {
+        console.log('✅ Status report sent to Slack successfully');
+    } else {
+        console.log('❌ Failed to send status report to Slack');
+    }
+}
+
+// Alert processing function
+async function processAlertsForMetrics(metrics: InteropMetrics, trackingData: TrackingResult[]) {
+    try {
+        // Create alert context
+        const alertContext = createAlertContext(
+            metrics,
+            trackingData,
+            undefined, // No previous metrics for now
+            60 * 60 * 1000 // 1 hour time window
+        );
+
+        // Process alerts using default rules
+        const alertResults = await processAlerts(
+            DEFAULT_ALERT_RULES,
+            alertContext,
+            alertNotificationCallback
+        );
+
+        // Log alert processing results
+        const triggeredAlerts = alertResults.filter(result => result.triggered);
+        const totalRules = alertResults.length;
+
+        console.log(`📋 Alert Processing Summary:`);
+        console.log(`   - Total rules evaluated: ${totalRules}`);
+        console.log(`   - Alerts triggered: ${triggeredAlerts.length}`);
+
+        if (triggeredAlerts.length > 0) {
+            console.log(`\n🚨 Triggered Alerts:`);
+            triggeredAlerts.forEach((result, index) => {
+                console.log(`   ${index + 1}. [${result.alert?.severity}] ${result.rule.name}`);
+                if (result.alert?.message) {
+                    console.log(`      Message: ${result.alert.message}`);
+                }
+            });
+        } else {
+            console.log(`   ✅ No alerts triggered - system is healthy`);
+        }
+
+        // Log disabled or failed rules for debugging        
+        const disabledRulesWithAllConditionsMet = alertResults.filter(result => !result.triggered && result.reason !== "Not all conditions are met");
+        
+        if (disabledRulesWithAllConditionsMet.length > 0) {
+            console.log(`\n📝 Non-triggered rules:`);
+            disabledRulesWithAllConditionsMet.forEach((result, index) => {
+                console.log(`   ${index + 1}. ${result.rule.name}: ${result.reason}`);
+            });
+        }
+
+        console.log()
+
+        // Send status report every N iterations if no alerts were triggered
+        if (triggeredAlerts.length === 0) {
+            iterationCount++;
+            
+            if (iterationCount === 1 || iterationCount % STATUS_REPORT_INTERVAL === 0) {
+                console.log(`\n📡 Sending status report (iteration ${iterationCount})...`);
+                await sendStatusReport(metrics, iterationCount);
+            }
+        } else {
+            // Reset counter if there were alerts (we don't want status reports during issues)
+            console.log(`\n⚠️  Status report skipped due to active alerts`);
+        }
+
+    } catch (error) {
+        console.error('❌ Error processing alerts:', error);
+    }
+}
+
 console.log('🚀 Starting OP Interop Alerts tracking...');
 console.log('📊 Configuration:');
 console.log(`   - Origin Chain: ${chainsInfo.chainOrigin.chainId} (${chainsInfo.chainOrigin.rpcUrl})`);
 console.log(`   - Destination Chain: ${chainsInfo.chainDestination.chainId} (${chainsInfo.chainDestination.rpcUrl})`);
 console.log(`   - Tracking interval: ${intervalMinutes} minutes`);
+console.log(`   - Status reports: Every ${STATUS_REPORT_INTERVAL} iterations ${slackConfig.webhookUrl ? '(to Slack)' : '(Slack disabled)'}`);
 console.log('');
 
 // Function to display metrics in a readable format
@@ -111,7 +375,7 @@ function displayMetrics(metrics: InteropMetrics) {
 }
 
 // Define callback to handle tracking events
-const trackingCallback = (result: TrackingResult) => {
+const trackingCallback = async (result: TrackingResult) => {
     console.log('\n=== 📊 TRACKING RESULT ===');
     console.log(`   - Timestamp: ${result.timestamp.toISOString()}`);
     console.log(`   - Success: ${result.success}`);
@@ -188,6 +452,12 @@ const trackingCallback = (result: TrackingResult) => {
         try {
             const metrics = generateMetrics(trackingResults);
             displayMetrics(metrics);
+            
+            // Process alerts based on the generated metrics
+            console.log(`\n🔍 Processing alerts for iteration ${iterationCount+1}...`);
+
+            await processAlertsForMetrics(metrics, trackingResults);
+            
         } catch (error) {
             console.error('❌ Error generating metrics:', error);
         }
@@ -196,10 +466,18 @@ const trackingCallback = (result: TrackingResult) => {
     }
 };
 
-// Start the tracking process
-try {
-    await startTracking(chainsInfo, pksInfo, trackingCallback, intervalMinutes);
-} catch (error) {
-    console.error('❌ Error during tracking:', error);
-    process.exit(1);
+// Main async function
+async function main() {
+    try {
+        await startTracking(chainsInfo, pksInfo, trackingCallback, intervalMinutes);
+    } catch (error) {
+        console.error('❌ Error during tracking:', error);
+        process.exit(1);
+    }
 }
+
+// Start the tracking process
+main().catch(error => {
+    console.error('❌ Fatal error:', error);
+    process.exit(1);
+});
