@@ -80,6 +80,19 @@ import {
     NotificationChannel
 } from "./alert-gen-module/types";
 
+// Setup module
+import { 
+    deployMessageReceiver,
+    setupContracts
+} from "./setup-module";
+import type {
+    DeployMessageReceiverParams,
+    DeploymentResult,
+    ChainSetupConfig,
+    SetupConfig,
+    SetupResult
+} from "./setup-module";
+
 export { 
     startTracking, 
     sendPing, 
@@ -107,7 +120,10 @@ export {
     ALERT_RULE_TEMPLATES,
     AlertSeverity,
     AlertCategory,
-    NotificationChannel
+    NotificationChannel,
+    // Setup module exports
+    deployMessageReceiver,
+    setupContracts
 };
 export type { 
     EventData, 
@@ -145,5 +161,11 @@ export type {
     AlertRuleEvaluationResult,
     AlertNotification,
     AlertNotificationCallback,
-    AlertRuleTemplate
+    AlertRuleTemplate,
+    // Setup module types
+    DeployMessageReceiverParams,
+    DeploymentResult,
+    ChainSetupConfig,
+    SetupConfig,
+    SetupResult
 };

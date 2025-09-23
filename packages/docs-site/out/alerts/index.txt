@@ -1,0 +1,415 @@
+2:I[79550,["231","static/chunks/231-d3fb88463de409bd.js","897","static/chunks/897-d672c0d1c9e62386.js","78","static/chunks/app/alerts/page-9a21debd6ab95ab9.js"],"CodeTabs"]
+3:I[79550,["231","static/chunks/231-d3fb88463de409bd.js","897","static/chunks/897-d672c0d1c9e62386.js","78","static/chunks/app/alerts/page-9a21debd6ab95ab9.js"],"TabPanel"]
+4:I[79550,["231","static/chunks/231-d3fb88463de409bd.js","897","static/chunks/897-d672c0d1c9e62386.js","78","static/chunks/app/alerts/page-9a21debd6ab95ab9.js"],"default"]
+c:I[231,["231","static/chunks/231-d3fb88463de409bd.js","897","static/chunks/897-d672c0d1c9e62386.js","78","static/chunks/app/alerts/page-9a21debd6ab95ab9.js"],""]
+d:I[39275,[],""]
+e:I[61343,[],""]
+f:I[12292,["231","static/chunks/231-d3fb88463de409bd.js","185","static/chunks/app/layout-63c6c6c5ccaf3884.js"],"default"]
+10:I[78573,["231","static/chunks/231-d3fb88463de409bd.js","185","static/chunks/app/layout-63c6c6c5ccaf3884.js"],"default"]
+5:Ta04,import { 
+  processAlerts,
+  createAlertContext,
+  createSimpleNotificationCallback,
+  DEFAULT_ALERT_RULES,
+  AlertNotification,
+  NotificationChannel
+} from '@wakeuplabs/op-interop-alerts-sdk';
+
+// Create notification callback for Slack
+const alertNotificationCallback = createSimpleNotificationCallback({
+  [NotificationChannel.SLACK]: async (notification: AlertNotification) => {
+    const { alert, rule, context } = notification;
+    
+    console.log(`🚨 ALERT: [${alert.severity}] ${alert.title}`);
+    console.log(`Message: ${alert.message}`);
+    
+    // Send to Slack webhook
+    const slackMessage = {
+      text: `🚨 *${alert.title}*`,
+      attachments: [{
+        color: alert.severity === 'CRITICAL' ? 'danger' : 'warning',
+        fields: [
+          { title: 'Severity', value: alert.severity, short: true },
+          { title: 'Category', value: alert.category, short: true },
+          { title: 'Message', value: alert.message, short: false }
+        ],
+        ts: Math.floor(alert.timestamp.getTime() / 1000)
+      }]
+    };
+    
+    try {
+      const response = await fetch(process.env.SLACK_WEBHOOK_URL!, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(slackMessage)
+      });
+      
+      if (response.ok) {
+        console.log('✅ Alert sent to Slack');
+      } else {
+        console.error('❌ Failed to send Slack alert');
+      }
+    } catch (error) {
+      console.error('Error sending Slack alert:', error);
+    }
+  }
+});
+
+// Process alerts with metrics and tracking data
+async function checkAlerts(metrics: InteropMetrics, trackingData: TrackingResult[]) {
+  try {
+    // Create alert context from current data
+    const alertContext = createAlertContext(
+      metrics,
+      trackingData,
+      undefined, // No previous metrics for comparison
+      60 * 60 * 1000 // 1 hour time window
+    );
+
+    // Process all default alert rules
+    const results = await processAlerts(
+      DEFAULT_ALERT_RULES,
+      alertContext,
+      alertNotificationCallback
+    );
+
+    // Log results
+    const triggeredAlerts = results.filter(r => r.triggered);
+    console.log(`📋 Processed ${results.length} rules, ${triggeredAlerts.length} alerts triggered`);
+    
+    if (triggeredAlerts.length > 0) {
+      triggeredAlerts.forEach((result, index) => {
+        console.log(`  ${index + 1}. [${result.alert?.severity}] ${result.rule.name}`);
+      });
+    }
+
+    return results;
+  } catch (error) {
+    console.error('❌ Error processing alerts:', error);
+    return [];
+  }
+}6:T9be,const { 
+  processAlerts,
+  createAlertContext,
+  createSimpleNotificationCallback,
+  DEFAULT_ALERT_RULES,
+  NotificationChannel
+} = require('@wakeuplabs/op-interop-alerts-sdk');
+
+// Create notification callback for Slack
+const alertNotificationCallback = createSimpleNotificationCallback({
+  [NotificationChannel.SLACK]: async (notification) => {
+    const { alert, rule, context } = notification;
+    
+    console.log(`🚨 ALERT: [${alert.severity}] ${alert.title}`);
+    console.log(`Message: ${alert.message}`);
+    
+    // Send to Slack webhook
+    const slackMessage = {
+      text: `🚨 *${alert.title}*`,
+      attachments: [{
+        color: alert.severity === 'CRITICAL' ? 'danger' : 'warning',
+        fields: [
+          { title: 'Severity', value: alert.severity, short: true },
+          { title: 'Category', value: alert.category, short: true },
+          { title: 'Message', value: alert.message, short: false }
+        ],
+        ts: Math.floor(alert.timestamp.getTime() / 1000)
+      }]
+    };
+    
+    try {
+      const response = await fetch(process.env.SLACK_WEBHOOK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(slackMessage)
+      });
+      
+      if (response.ok) {
+        console.log('✅ Alert sent to Slack');
+      } else {
+        console.error('❌ Failed to send Slack alert');
+      }
+    } catch (error) {
+      console.error('Error sending Slack alert:', error);
+    }
+  }
+});
+
+// Process alerts with metrics and tracking data
+async function checkAlerts(metrics, trackingData) {
+  try {
+    // Create alert context from current data
+    const alertContext = createAlertContext(
+      metrics,
+      trackingData,
+      undefined, // No previous metrics for comparison
+      60 * 60 * 1000 // 1 hour time window
+    );
+
+    // Process all default alert rules
+    const results = await processAlerts(
+      DEFAULT_ALERT_RULES,
+      alertContext,
+      alertNotificationCallback
+    );
+
+    // Log results
+    const triggeredAlerts = results.filter(r => r.triggered);
+    console.log(`📋 Processed ${results.length} rules, ${triggeredAlerts.length} alerts triggered`);
+    
+    if (triggeredAlerts.length > 0) {
+      triggeredAlerts.forEach((result, index) => {
+        console.log(`  ${index + 1}. [${result.alert?.severity}] ${result.rule.name}`);
+      });
+    }
+
+    return results;
+  } catch (error) {
+    console.error('❌ Error processing alerts:', error);
+    return [];
+  }
+}7:T775,import { 
+  createAlertRule,
+  createRuleFromTemplate,
+  ALERT_RULE_TEMPLATES,
+  AlertSeverity,
+  AlertCategory
+} from '@wakeuplabs/op-interop-alerts-sdk';
+
+// Create a custom alert rule from scratch
+const customLatencyRule = createAlertRule({
+  name: 'Custom High Latency Alert',
+  description: 'Triggers when average latency exceeds 2 minutes',
+  category: AlertCategory.LATENCY,
+  severity: AlertSeverity.HIGH,
+  conditions: [
+    {
+      field: 'coreMetrics.latency.averageLatencyMs',
+      operator: 'gt',
+      value: 120000 // 2 minutes in milliseconds
+    }
+  ],
+  cooldownMs: 10 * 60 * 1000, // 10 minutes cooldown
+  channels: [NotificationChannel.SLACK, NotificationChannel.WEBHOOK]
+});
+
+// Create a rule from a template
+const criticalSuccessRateRule = createRuleFromTemplate(
+  ALERT_RULE_TEMPLATES.CRITICAL_SUCCESS_RATE,
+  {
+    // Override template values
+    conditions: [
+      {
+        field: 'coreMetrics.throughput.successRate',
+        operator: 'lt',
+        value: 85 // Alert when success rate < 85%
+      }
+    ],
+    cooldownMs: 5 * 60 * 1000 // 5 minutes cooldown
+  }
+);
+
+// Create a rule with duration-based conditions
+const persistentErrorRule = createAlertRule({
+  name: 'Persistent Error Rate',
+  description: 'Triggers when error rate stays high for 15 minutes',
+  category: AlertCategory.ERROR_RATE,
+  severity: AlertSeverity.CRITICAL,
+  conditions: [
+    {
+      field: 'health.errorSummary.errorRate',
+      operator: 'gt',
+      value: 10, // Error rate > 10%
+      duration: 15 * 60 * 1000 // Must persist for 15 minutes
+    }
+  ],
+  cooldownMs: 30 * 60 * 1000, // 30 minutes cooldown
+  channels: [NotificationChannel.SLACK]
+});
+
+// Use custom rules
+const customRules = [
+  customLatencyRule,
+  criticalSuccessRateRule,
+  persistentErrorRule
+];
+
+// Process with custom rules
+const results = await processAlerts(
+  customRules,
+  alertContext,
+  alertNotificationCallback
+);8:T791,const { 
+  createAlertRule,
+  createRuleFromTemplate,
+  ALERT_RULE_TEMPLATES,
+  AlertSeverity,
+  AlertCategory,
+  NotificationChannel
+} = require('@wakeuplabs/op-interop-alerts-sdk');
+
+// Create a custom alert rule from scratch
+const customLatencyRule = createAlertRule({
+  name: 'Custom High Latency Alert',
+  description: 'Triggers when average latency exceeds 2 minutes',
+  category: AlertCategory.LATENCY,
+  severity: AlertSeverity.HIGH,
+  conditions: [
+    {
+      field: 'coreMetrics.latency.averageLatencyMs',
+      operator: 'gt',
+      value: 120000 // 2 minutes in milliseconds
+    }
+  ],
+  cooldownMs: 10 * 60 * 1000, // 10 minutes cooldown
+  channels: [NotificationChannel.SLACK, NotificationChannel.WEBHOOK]
+});
+
+// Create a rule from a template
+const criticalSuccessRateRule = createRuleFromTemplate(
+  ALERT_RULE_TEMPLATES.CRITICAL_SUCCESS_RATE,
+  {
+    // Override template values
+    conditions: [
+      {
+        field: 'coreMetrics.throughput.successRate',
+        operator: 'lt',
+        value: 85 // Alert when success rate < 85%
+      }
+    ],
+    cooldownMs: 5 * 60 * 1000 // 5 minutes cooldown
+  }
+);
+
+// Create a rule with duration-based conditions
+const persistentErrorRule = createAlertRule({
+  name: 'Persistent Error Rate',
+  description: 'Triggers when error rate stays high for 15 minutes',
+  category: AlertCategory.ERROR_RATE,
+  severity: AlertSeverity.CRITICAL,
+  conditions: [
+    {
+      field: 'health.errorSummary.errorRate',
+      operator: 'gt',
+      value: 10, // Error rate > 10%
+      duration: 15 * 60 * 1000 // Must persist for 15 minutes
+    }
+  ],
+  cooldownMs: 30 * 60 * 1000, // 30 minutes cooldown
+  channels: [NotificationChannel.SLACK]
+});
+
+// Use custom rules
+const customRules = [
+  customLatencyRule,
+  criticalSuccessRateRule,
+  persistentErrorRule
+];
+
+// Process with custom rules
+const results = await processAlerts(
+  customRules,
+  alertContext,
+  alertNotificationCallback
+);9:T434,// Set up Slack notifications
+const slackNotificationCallback = createSimpleNotificationCallback({
+  [NotificationChannel.SLACK]: async (notification: AlertNotification) => {
+    const { alert } = notification;
+    
+    const slackPayload = {
+      username: 'OP Interop Alerts',
+      icon_emoji: ':warning:',
+      channel: '#alerts',
+      attachments: [{
+        color: alert.severity === 'CRITICAL' ? 'danger' : 'warning',
+        title: alert.title,
+        text: alert.message,
+        fields: [
+          { title: 'Severity', value: alert.severity, short: true },
+          { title: 'Category', value: alert.category, short: true },
+          { title: 'Time', value: alert.timestamp.toISOString(), short: false }
+        ],
+        footer: 'OP Interop Alerts',
+        ts: Math.floor(alert.timestamp.getTime() / 1000)
+      }]
+    };
+    
+    const response = await fetch(process.env.SLACK_WEBHOOK_URL!, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(slackPayload)
+    });
+    
+    return response.ok;
+  }
+});a:T44c,// Set up Discord notifications
+const discordNotificationCallback = createSimpleNotificationCallback({
+  [NotificationChannel.DISCORD]: async (notification: AlertNotification) => {
+    const { alert } = notification;
+    
+    const discordPayload = {
+      username: 'OP Interop Alerts',
+      avatar_url: 'https://your-domain.com/alert-bot-avatar.png',
+      embeds: [{
+        title: alert.title,
+        description: alert.message,
+        color: alert.severity === 'CRITICAL' ? 0xFF0000 : 0xFFA500,
+        fields: [
+          { name: 'Severity', value: alert.severity, inline: true },
+          { name: 'Category', value: alert.category, inline: true },
+          { name: 'Time', value: alert.timestamp.toISOString(), inline: false }
+        ],
+        footer: { text: 'OP Interop Alerts' },
+        timestamp: alert.timestamp.toISOString()
+      }]
+    };
+    
+    const response = await fetch(process.env.DISCORD_WEBHOOK_URL!, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(discordPayload)
+    });
+    
+    return response.ok;
+  }
+});b:T4a7,// Set up custom webhook notifications
+const webhookNotificationCallback = createSimpleNotificationCallback({
+  [NotificationChannel.WEBHOOK]: async (notification: AlertNotification) => {
+    const { alert, rule, context } = notification;
+    
+    const webhookPayload = {
+      alert: {
+        id: alert.id,
+        title: alert.title,
+        message: alert.message,
+        severity: alert.severity,
+        category: alert.category,
+        timestamp: alert.timestamp.toISOString()
+      },
+      rule: {
+        name: rule.name,
+        description: rule.description
+      },
+      metrics: {
+        status: context.metrics.status.interopStatus,
+        healthLevel: context.metrics.status.healthLevel,
+        successRate: context.metrics.coreMetrics.throughput.successRate,
+        averageLatency: context.metrics.coreMetrics.latency.averageLatencyMs
+      }
+    };
+    
+    const response = await fetch(process.env.CUSTOM_WEBHOOK_URL!, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${process.env.WEBHOOK_TOKEN}`
+      },
+      body: JSON.stringify(webhookPayload)
+    });
+    
+    return response.ok;
+  }
+});0:["vaz_tpm5HaGxb8wvZm7sd",[[["",{"children":["alerts",{"children":["__PAGE__",{}]}]},"$undefined","$undefined",true],["",{"children":["alerts",{"children":["__PAGE__",{},[["$L1",["$","div",null,{"className":"max-w-none sm:max-w-4xl mx-auto","children":[["$","div",null,{"className":"mb-8","children":[["$","div",null,{"className":"flex items-center space-x-3 mb-4","children":[["$","div",null,{"className":"w-10 h-10 bg-yellow/10 rounded-lg flex items-center justify-center","children":["$","svg",null,{"xmlns":"http://www.w3.org/2000/svg","width":24,"height":24,"viewBox":"0 0 24 24","fill":"none","stroke":"currentColor","strokeWidth":2,"strokeLinecap":"round","strokeLinejoin":"round","className":"lucide lucide-triangle-alert w-5 h-5 text-yellow","children":[["$","path","wmoenq",{"d":"m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"}],["$","path","juzpu7",{"d":"M12 9v4"}],["$","path","p32p05",{"d":"M12 17h.01"}],"$undefined"]}]}],["$","h1",null,{"className":"text-3xl font-bold text-midnight","children":"Alerts Module"}]]}],["$","p",null,{"className":"text-lg text-gray-600","children":"Set up intelligent alerts with configurable rules, cooldown periods, and multi-channel notifications. Get notified when your cross-chain operations need attention."}]]}],["$","div",null,{"className":"mb-8","children":[["$","h2",null,{"className":"text-2xl font-bold text-gray-900 mb-4","children":"Overview"}],["$","p",null,{"className":"text-gray-600 mb-6","children":"The Alerts Module provides a comprehensive system for creating and managing alerts based on interoperability metrics. It uses data from both the Tracking and Metrics modules to trigger intelligent notifications through various channels."}],["$","div",null,{"className":"grid md:grid-cols-2 gap-6 mb-6","children":[["$","div",null,{"className":"bg-white border border-gray-200 rounded-lg p-6","children":[["$","div",null,{"className":"flex items-center space-x-3 mb-3","children":[["$","svg",null,{"xmlns":"http://www.w3.org/2000/svg","width":24,"height":24,"viewBox":"0 0 24 24","fill":"none","stroke":"currentColor","strokeWidth":2,"strokeLinecap":"round","strokeLinejoin":"round","className":"lucide lucide-bell w-5 h-5 text-yellow","children":[["$","path","1qo2s2",{"d":"M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"}],["$","path","qgo35s",{"d":"M10.3 21a1.94 1.94 0 0 0 3.4 0"}],"$undefined"]}],["$","h3",null,{"className":"font-semibold text-gray-900","children":"Smart Notifications"}]]}],["$","ul",null,{"className":"space-y-1 text-sm text-gray-600","children":[["$","li",null,{"children":"• Multi-channel support (Slack, Discord, webhooks)"}],["$","li",null,{"children":"• Configurable alert rules and conditions"}],["$","li",null,{"children":"• Cooldown periods to prevent spam"}],["$","li",null,{"children":"• Alert severity levels and categorization"}]]}]]}],["$","div",null,{"className":"bg-white border border-gray-200 rounded-lg p-6","children":[["$","div",null,{"className":"flex items-center space-x-3 mb-3","children":[["$","svg",null,{"xmlns":"http://www.w3.org/2000/svg","width":24,"height":24,"viewBox":"0 0 24 24","fill":"none","stroke":"currentColor","strokeWidth":2,"strokeLinecap":"round","strokeLinejoin":"round","className":"lucide lucide-zap w-5 h-5 text-yellow","children":[["$","path","1xq2db",{"d":"M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"}],"$undefined"]}],["$","h3",null,{"className":"font-semibold text-gray-900","children":"Rule-Based System"}]]}],["$","ul",null,{"className":"space-y-1 text-sm text-gray-600","children":[["$","li",null,{"children":"• Pre-defined rules for common scenarios"}],["$","li",null,{"children":"• Custom rule creation and templates"}],["$","li",null,{"children":"• Duration-based conditions"}],["$","li",null,{"children":"• Context-aware alert generation"}]]}]]}]]}]]}],["$","div",null,{"className":"mb-8","children":[["$","h2",null,{"className":"text-2xl font-bold text-gray-900 mb-4","children":"processAlerts"}],["$","p",null,{"className":"text-gray-600 mb-6","children":"The main function for processing alert rules against current metrics and triggering notifications when conditions are met."}],["$","div",null,{"className":"bg-yellow/5 border border-yellow/20 rounded-lg p-4 mb-6","children":["$","div",null,{"className":"flex items-start space-x-3","children":[["$","svg",null,{"xmlns":"http://www.w3.org/2000/svg","width":24,"height":24,"viewBox":"0 0 24 24","fill":"none","stroke":"currentColor","strokeWidth":2,"strokeLinecap":"round","strokeLinejoin":"round","className":"lucide lucide-info w-5 h-5 text-yellow mt-0.5 flex-shrink-0","children":[["$","circle","1mglay",{"cx":"12","cy":"12","r":"10"}],["$","path","1dtifu",{"d":"M12 16v-4"}],["$","path","e9boi3",{"d":"M12 8h.01"}],"$undefined"]}],["$","div",null,{"children":[["$","h3",null,{"className":"font-semibold text-midnight mb-1","children":"Function Signature"}],["$","code",null,{"className":"text-gray-700 text-sm","children":"processAlerts(rules, context, notificationCallback): Promise<AlertRuleEvaluationResult[]>"}]]}]]}]}],["$","$L2",null,{"children":[["$","$L3",null,{"label":"TypeScript","children":["$","$L4",null,{"language":"typescript","children":"$5"}]}],["$","$L3",null,{"label":"JavaScript","children":["$","$L4",null,{"language":"javascript","children":"$6"}]}]]}]]}],["$","div",null,{"className":"mb-8","children":[["$","h2",null,{"className":"text-2xl font-bold text-gray-900 mb-4","children":"Creating Custom Alert Rules"}],["$","p",null,{"className":"text-gray-600 mb-6","children":"You can create custom alert rules tailored to your specific monitoring needs:"}],["$","$L2",null,{"children":[["$","$L3",null,{"label":"TypeScript","children":["$","$L4",null,{"language":"typescript","children":"$7"}]}],["$","$L3",null,{"label":"JavaScript","children":["$","$L4",null,{"language":"javascript","children":"$8"}]}]]}]]}],["$","div",null,{"className":"mb-8","children":[["$","h2",null,{"className":"text-2xl font-bold text-gray-900 mb-4","children":"Default Alert Rules"}],["$","p",null,{"className":"text-gray-600 mb-6","children":"The SDK comes with pre-configured alert rules for common monitoring scenarios:"}],["$","div",null,{"className":"overflow-x-auto","children":["$","table",null,{"className":"w-full border border-gray-200 rounded-lg","children":[["$","thead",null,{"className":"bg-gray-50","children":["$","tr",null,{"children":[["$","th",null,{"className":"px-4 py-3 text-left text-sm font-semibold text-gray-900","children":"Rule Name"}],["$","th",null,{"className":"px-4 py-3 text-left text-sm font-semibold text-gray-900","children":"Category"}],["$","th",null,{"className":"px-4 py-3 text-left text-sm font-semibold text-gray-900","children":"Severity"}],["$","th",null,{"className":"px-4 py-3 text-left text-sm font-semibold text-gray-900","children":"Condition"}]]}]}],["$","tbody",null,{"className":"divide-y divide-gray-200","children":[["$","tr",null,{"children":[["$","td",null,{"className":"px-4 py-3 text-sm font-medium text-gray-900","children":"High Latency"}],["$","td",null,{"className":"px-4 py-3 text-sm text-gray-600","children":"LATENCY"}],["$","td",null,{"className":"px-4 py-3 text-sm text-yellow font-medium","children":"HIGH"}],["$","td",null,{"className":"px-4 py-3 text-sm text-gray-600","children":"Average latency > 60s"}]]}],["$","tr",null,{"children":[["$","td",null,{"className":"px-4 py-3 text-sm font-medium text-gray-900","children":"Critical Latency"}],["$","td",null,{"className":"px-4 py-3 text-sm text-gray-600","children":"LATENCY"}],["$","td",null,{"className":"px-4 py-3 text-sm text-orange font-medium","children":"CRITICAL"}],["$","td",null,{"className":"px-4 py-3 text-sm text-gray-600","children":"Average latency > 180s"}]]}],["$","tr",null,{"children":[["$","td",null,{"className":"px-4 py-3 text-sm font-medium text-gray-900","children":"Low Success Rate"}],["$","td",null,{"className":"px-4 py-3 text-sm text-gray-600","children":"THROUGHPUT"}],["$","td",null,{"className":"px-4 py-3 text-sm text-yellow font-medium","children":"HIGH"}],["$","td",null,{"className":"px-4 py-3 text-sm text-gray-600","children":"Success rate < 95%"}]]}],["$","tr",null,{"children":[["$","td",null,{"className":"px-4 py-3 text-sm font-medium text-gray-900","children":"Critical Success Rate"}],["$","td",null,{"className":"px-4 py-3 text-sm text-gray-600","children":"THROUGHPUT"}],["$","td",null,{"className":"px-4 py-3 text-sm text-orange font-medium","children":"CRITICAL"}],["$","td",null,{"className":"px-4 py-3 text-sm text-gray-600","children":"Success rate < 90%"}]]}],["$","tr",null,{"children":[["$","td",null,{"className":"px-4 py-3 text-sm font-medium text-gray-900","children":"System Down"}],["$","td",null,{"className":"px-4 py-3 text-sm text-gray-600","children":"SYSTEM_STATUS"}],["$","td",null,{"className":"px-4 py-3 text-sm text-orange font-medium","children":"CRITICAL"}],["$","td",null,{"className":"px-4 py-3 text-sm text-gray-600","children":"Interop status = DOWN"}]]}],["$","tr",null,{"children":[["$","td",null,{"className":"px-4 py-3 text-sm font-medium text-gray-900","children":"Consecutive Failures"}],["$","td",null,{"className":"px-4 py-3 text-sm text-gray-600","children":"CONSECUTIVE_FAILURES"}],["$","td",null,{"className":"px-4 py-3 text-sm text-orange font-medium","children":"CRITICAL"}],["$","td",null,{"className":"px-4 py-3 text-sm text-gray-600","children":"5+ consecutive failures"}]]}]]}]]}]}]]}],["$","div",null,{"className":"mb-8","children":[["$","h2",null,{"className":"text-2xl font-bold text-gray-900 mb-4","children":"Notification Channels"}],["$","p",null,{"className":"text-gray-600 mb-6","children":"Configure multiple notification channels to ensure alerts reach the right people:"}],["$","$L2",null,{"children":[["$","$L3",null,{"label":"Slack Integration","children":["$","$L4",null,{"language":"typescript","children":"$9"}]}],["$","$L3",null,{"label":"Discord Integration","children":["$","$L4",null,{"language":"typescript","children":"$a"}]}],["$","$L3",null,{"label":"Custom Webhook","children":["$","$L4",null,{"language":"typescript","children":"$b"}]}]]}]]}],["$","div",null,{"className":"mb-8","children":[["$","h2",null,{"className":"text-2xl font-bold text-gray-900 mb-4","children":"Best Practices"}],["$","div",null,{"className":"space-y-6","children":[["$","div",null,{"className":"bg-blue/5 border border-blue/20 rounded-lg p-4","children":["$","div",null,{"className":"flex items-start space-x-3","children":[["$","svg",null,{"xmlns":"http://www.w3.org/2000/svg","width":24,"height":24,"viewBox":"0 0 24 24","fill":"none","stroke":"currentColor","strokeWidth":2,"strokeLinecap":"round","strokeLinejoin":"round","className":"lucide lucide-circle-check-big w-5 h-5 text-blue mt-0.5 flex-shrink-0","children":[["$","path","g774vq",{"d":"M22 11.08V12a10 10 0 1 1-5.93-9.14"}],["$","path","1pflzl",{"d":"m9 11 3 3L22 4"}],"$undefined"]}],["$","div",null,{"children":[["$","h3",null,{"className":"font-semibold text-midnight mb-1","children":"Use Appropriate Cooldown Periods"}],["$","p",null,{"className":"text-gray-700 text-sm","children":"Set cooldown periods to prevent alert spam. Critical alerts might need shorter cooldowns (5-10 minutes), while warning alerts can have longer cooldowns (15-30 minutes)."}]]}]]}]}],["$","div",null,{"className":"bg-blue/5 border border-blue/20 rounded-lg p-4","children":["$","div",null,{"className":"flex items-start space-x-3","children":[["$","svg",null,{"xmlns":"http://www.w3.org/2000/svg","width":24,"height":24,"viewBox":"0 0 24 24","fill":"none","stroke":"currentColor","strokeWidth":2,"strokeLinecap":"round","strokeLinejoin":"round","className":"lucide lucide-circle-check-big w-5 h-5 text-blue mt-0.5 flex-shrink-0","children":[["$","path","g774vq",{"d":"M22 11.08V12a10 10 0 1 1-5.93-9.14"}],["$","path","1pflzl",{"d":"m9 11 3 3L22 4"}],"$undefined"]}],["$","div",null,{"children":[["$","h3",null,{"className":"font-semibold text-midnight mb-1","children":"Layer Alert Severity"}],["$","p",null,{"className":"text-gray-700 text-sm","children":"Use different severity levels strategically. Start with warnings for early detection, then escalate to critical alerts for urgent issues that require immediate attention."}]]}]]}]}],["$","div",null,{"className":"bg-blue/5 border border-blue/20 rounded-lg p-4","children":["$","div",null,{"className":"flex items-start space-x-3","children":[["$","svg",null,{"xmlns":"http://www.w3.org/2000/svg","width":24,"height":24,"viewBox":"0 0 24 24","fill":"none","stroke":"currentColor","strokeWidth":2,"strokeLinecap":"round","strokeLinejoin":"round","className":"lucide lucide-circle-check-big w-5 h-5 text-blue mt-0.5 flex-shrink-0","children":[["$","path","g774vq",{"d":"M22 11.08V12a10 10 0 1 1-5.93-9.14"}],["$","path","1pflzl",{"d":"m9 11 3 3L22 4"}],"$undefined"]}],["$","div",null,{"children":[["$","h3",null,{"className":"font-semibold text-midnight mb-1","children":"Test Your Alert Rules"}],["$","p",null,{"className":"text-gray-700 text-sm","children":"Regularly test your alert rules with known conditions to ensure they trigger correctly. Consider creating test scenarios that simulate various failure modes."}]]}]]}]}],["$","div",null,{"className":"bg-orange/5 border border-orange/20 rounded-lg p-4","children":["$","div",null,{"className":"flex items-start space-x-3","children":[["$","svg",null,{"xmlns":"http://www.w3.org/2000/svg","width":24,"height":24,"viewBox":"0 0 24 24","fill":"none","stroke":"currentColor","strokeWidth":2,"strokeLinecap":"round","strokeLinejoin":"round","className":"lucide lucide-circle-x w-5 h-5 text-orange mt-0.5 flex-shrink-0","children":[["$","circle","1mglay",{"cx":"12","cy":"12","r":"10"}],["$","path","1uzhvr",{"d":"m15 9-6 6"}],["$","path","z0biqf",{"d":"m9 9 6 6"}],"$undefined"]}],["$","div",null,{"children":[["$","h3",null,{"className":"font-semibold text-midnight mb-1","children":"Avoid Alert Fatigue"}],["$","p",null,{"className":"text-gray-700 text-sm","children":"Don't create too many alerts or set thresholds too low. Focus on alerts that require action. Use duration-based conditions for transient issues."}]]}]]}]}]]}]]}],["$","div",null,{"className":"bg-yellow/5 border border-yellow/20 rounded-lg p-6","children":[["$","h2",null,{"className":"text-xl font-bold text-gray-900 mb-4","children":"Next Steps"}],["$","p",null,{"className":"text-gray-700 mb-4","children":"Now that you understand the Alerts Module, explore complete examples that combine all three modules:"}],["$","div",null,{"className":"flex flex-col sm:flex-row gap-3","children":[["$","$Lc",null,{"href":"/examples","className":"inline-flex items-center px-4 py-2 bg-yellow text-white font-medium rounded-lg hover:bg-yellow/80 transition-colors","children":["View Examples",["$","svg",null,{"xmlns":"http://www.w3.org/2000/svg","width":24,"height":24,"viewBox":"0 0 24 24","fill":"none","stroke":"currentColor","strokeWidth":2,"strokeLinecap":"round","strokeLinejoin":"round","className":"lucide lucide-arrow-right w-4 h-4 ml-2","children":[["$","path","1ays0h",{"d":"M5 12h14"}],["$","path","xquz4c",{"d":"m12 5 7 7-7 7"}],"$undefined"]}]]}],["$","$Lc",null,{"href":"/installation","className":"inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors","children":["Back to Installation",["$","svg",null,{"xmlns":"http://www.w3.org/2000/svg","width":24,"height":24,"viewBox":"0 0 24 24","fill":"none","stroke":"currentColor","strokeWidth":2,"strokeLinecap":"round","strokeLinejoin":"round","className":"lucide lucide-arrow-right w-4 h-4 ml-2","children":[["$","path","1ays0h",{"d":"M5 12h14"}],["$","path","xquz4c",{"d":"m12 5 7 7-7 7"}],"$undefined"]}]]}]]}]]}]]}]],null],null]},["$","$Ld",null,{"parallelRouterKey":"children","segmentPath":["children","alerts","children"],"error":"$undefined","errorStyles":"$undefined","errorScripts":"$undefined","template":["$","$Le",null,{}],"templateStyles":"$undefined","templateScripts":"$undefined","notFound":"$undefined","notFoundStyles":"$undefined","styles":null}],null]},[["$","html",null,{"lang":"en","children":["$","body",null,{"className":"__className_1ef16e","children":["$","div",null,{"className":"min-h-screen bg-white","children":[["$","$Lf",null,{}],["$","div",null,{"className":"flex","children":[["$","aside",null,{"className":"hidden md:block w-64 flex-shrink-0","children":["$","div",null,{"className":"sticky top-16 h-screen overflow-y-auto","children":["$","$L10",null,{}]}]}],["$","main",null,{"className":"flex-1 max-w-none","children":["$","div",null,{"className":"pl-4 pr-4 sm:pl-6 sm:pr-6 lg:pl-8 lg:pr-8 py-8","children":["$","$Ld",null,{"parallelRouterKey":"children","segmentPath":["children"],"error":"$undefined","errorStyles":"$undefined","errorScripts":"$undefined","template":["$","$Le",null,{}],"templateStyles":"$undefined","templateScripts":"$undefined","notFound":[["$","title",null,{"children":"404: This page could not be found."}],["$","div",null,{"style":{"fontFamily":"system-ui,\"Segoe UI\",Roboto,Helvetica,Arial,sans-serif,\"Apple Color Emoji\",\"Segoe UI Emoji\"","height":"100vh","textAlign":"center","display":"flex","flexDirection":"column","alignItems":"center","justifyContent":"center"},"children":["$","div",null,{"children":[["$","style",null,{"dangerouslySetInnerHTML":{"__html":"body{color:#000;background:#fff;margin:0}.next-error-h1{border-right:1px solid rgba(0,0,0,.3)}@media (prefers-color-scheme:dark){body{color:#fff;background:#000}.next-error-h1{border-right:1px solid rgba(255,255,255,.3)}}"}}],["$","h1",null,{"className":"next-error-h1","style":{"display":"inline-block","margin":"0 20px 0 0","padding":"0 23px 0 0","fontSize":24,"fontWeight":500,"verticalAlign":"top","lineHeight":"49px"},"children":"404"}],["$","div",null,{"style":{"display":"inline-block"},"children":["$","h2",null,{"style":{"fontSize":14,"fontWeight":400,"lineHeight":"49px","margin":0},"children":"This page could not be found."}]}]]}]}]],"notFoundStyles":[],"styles":null}]}]}]]}],["$","footer",null,{"className":"bg-gray-50 border-t border-gray-300","children":["$","div",null,{"className":"px-4 sm:px-6 lg:px-8 py-8","children":["$","div",null,{"className":"flex flex-col md:flex-row justify-between items-center","children":[["$","div",null,{"className":"flex items-center space-x-4 mb-6 md:mb-0","children":[["$","img",null,{"src":"/logo-wu.png","alt":"WakeUp Labs","className":"h-8 w-auto"}],["$","div",null,{"className":"flex flex-col","children":[["$","span",null,{"className":"text-sm font-medium text-midnight","children":"OP Interop Alerts SDK"}],["$","span",null,{"className":"text-xs text-gray-500","children":"Cross-chain monitoring documentation"}]]}]]}],["$","div",null,{"className":"flex items-center space-x-4","children":[["$","a",null,{"href":"https://www.npmjs.com/package/@wakeuplabs/op-interop-alerts-sdk","target":"_blank","rel":"noopener noreferrer","className":"hover:opacity-80 transition-opacity p-2","title":"NPM Package","children":["$","img",null,{"src":"/npm-logo-red.png","alt":"NPM","className":"h-4 w-auto"}]}],["$","a",null,{"href":"https://github.com/wakeuplabs-io/op-interop-alerts","target":"_blank","rel":"noopener noreferrer","className":"hover:opacity-80 transition-opacity p-2","title":"GitHub Repository","children":["$","img",null,{"src":"/github-mark.png","alt":"GitHub","className":"h-5 w-auto"}]}],["$","a",null,{"href":"https://wakeuplabs.io","target":"_blank","rel":"noopener noreferrer","className":"hover:opacity-80 transition-opacity p-2","title":"WakeUp Labs","children":["$","img",null,{"src":"/logo-wu-isotype.png","alt":"WakeUp Labs","className":"h-4 w-auto"}]}]]}]]}]}]}]]}]}]}],null],null],[[["$","link","0",{"rel":"stylesheet","href":"/op-interop-alerts/_next/static/css/d8d0d207bb4bc00b.css","precedence":"next","crossOrigin":"$undefined"}]],[null,"$L11"]]]]]
+11:[["$","meta","0",{"name":"viewport","content":"width=device-width, initial-scale=1"}],["$","meta","1",{"charSet":"utf-8"}],["$","title","2",{"children":"Alerts Module | OP Interop Alerts SDK"}],["$","meta","3",{"name":"description","content":"Learn how to use the Alerts Module to set up intelligent notifications based on cross-chain metrics and system health."}],["$","meta","4",{"name":"author","content":"WakeUp Labs"}],["$","meta","5",{"name":"keywords","content":"optimism,superchain,cross-chain,interoperability,monitoring,alerts,l2,ethereum"}],["$","meta","6",{"name":"creator","content":"WakeUp Labs"}],["$","meta","7",{"property":"og:title","content":"OP Interop Alerts SDK"}],["$","meta","8",{"property":"og:description","content":"TypeScript SDK for monitoring cross-chain interoperability across Optimism Superchain"}],["$","meta","9",{"property":"og:url","content":"https://wakeuplabs-io.github.io/op-interop-alerts/"}],["$","meta","10",{"property":"og:site_name","content":"OP Interop Alerts SDK"}],["$","meta","11",{"property":"og:locale","content":"en_US"}],["$","meta","12",{"property":"og:type","content":"website"}],["$","meta","13",{"name":"twitter:card","content":"summary_large_image"}],["$","meta","14",{"name":"twitter:title","content":"OP Interop Alerts SDK"}],["$","meta","15",{"name":"twitter:description","content":"TypeScript SDK for monitoring cross-chain interoperability across Optimism Superchain"}],["$","link","16",{"rel":"shortcut icon","href":"/favicon-wu.svg"}],["$","link","17",{"rel":"icon","href":"/favicon-wu.svg"}],["$","link","18",{"rel":"apple-touch-icon","href":"/favicon-wu.svg"}],["$","meta","19",{"name":"next-size-adjust"}]]
+1:null

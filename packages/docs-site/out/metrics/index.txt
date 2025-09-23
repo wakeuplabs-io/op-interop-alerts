@@ -1,0 +1,312 @@
+2:I[79550,["231","static/chunks/231-d3fb88463de409bd.js","897","static/chunks/897-d672c0d1c9e62386.js","860","static/chunks/app/metrics/page-2eca68a586f50e4c.js"],"CodeTabs"]
+3:I[79550,["231","static/chunks/231-d3fb88463de409bd.js","897","static/chunks/897-d672c0d1c9e62386.js","860","static/chunks/app/metrics/page-2eca68a586f50e4c.js"],"TabPanel"]
+4:I[79550,["231","static/chunks/231-d3fb88463de409bd.js","897","static/chunks/897-d672c0d1c9e62386.js","860","static/chunks/app/metrics/page-2eca68a586f50e4c.js"],"default"]
+9:I[231,["231","static/chunks/231-d3fb88463de409bd.js","897","static/chunks/897-d672c0d1c9e62386.js","860","static/chunks/app/metrics/page-2eca68a586f50e4c.js"],""]
+a:I[39275,[],""]
+b:I[61343,[],""]
+c:I[12292,["231","static/chunks/231-d3fb88463de409bd.js","185","static/chunks/app/layout-63c6c6c5ccaf3884.js"],"default"]
+d:I[78573,["231","static/chunks/231-d3fb88463de409bd.js","185","static/chunks/app/layout-63c6c6c5ccaf3884.js"],"default"]
+5:Ta38,import { 
+  generateMetrics, 
+  InteropMetrics,
+  TrackingResult,
+  MetricsConfig
+} from '@wakeuplabs/op-interop-alerts-sdk';
+
+// Sample tracking results (normally collected from startTracking)
+const trackingResults: TrackingResult[] = [
+  // ... your tracking results from monitoring
+];
+
+// Optional configuration for metrics generation
+const metricsConfig: MetricsConfig = {
+  expectedLatencyMs: 30000,    // Expected latency threshold (30 seconds)
+  severeLatencyMs: 120000,     // Severe latency threshold (2 minutes)
+  expectedGasLimit: 100000n,   // Expected gas limit
+  healthThresholds: {
+    successRateWarning: 0.95,  // Warn if success rate < 95%
+    successRateCritical: 0.90, // Critical if success rate < 90%
+    latencyWarningMs: 60000,   // Warn if latency > 1 minute
+    latencyCriticalMs: 180000  // Critical if latency > 3 minutes
+  }
+};
+
+// Generate comprehensive metrics
+const metrics: InteropMetrics = generateMetrics(trackingResults, metricsConfig);
+
+// Access different metric categories
+console.log('=== System Status ===');
+console.log('Interop Status:', metrics.status.interopStatus);
+console.log('Health Level:', metrics.status.healthLevel);
+console.log('Timing Status:', metrics.status.timingStatus);
+
+console.log('\n=== Throughput Metrics ===');
+const throughput = metrics.coreMetrics.throughput;
+console.log(`Total Messages: ${throughput.totalMessages}`);
+console.log(`Success Rate: ${throughput.successRate.toFixed(2)}%`);
+console.log(`Messages/Hour: ${throughput.messagesPerHour.toFixed(2)}`);
+
+console.log('\n=== Latency Metrics ===');
+const latency = metrics.coreMetrics.latency;
+console.log(`Average: ${(latency.averageLatencyMs / 1000).toFixed(2)}s`);
+console.log(`Median: ${(latency.medianLatencyMs / 1000).toFixed(2)}s`);
+console.log(`P95: ${(latency.p95LatencyMs / 1000).toFixed(2)}s`);
+console.log(`P99: ${(latency.p99LatencyMs / 1000).toFixed(2)}s`);
+
+console.log('\n=== Gas Metrics ===');
+const gas = metrics.coreMetrics.gas;
+console.log(`Avg Send Gas: ${gas.averageSendGas.toString()}`);
+console.log(`Avg Relay Gas: ${gas.averageRelayGas.toString()}`);
+console.log(`Total Gas Used: ${gas.totalGasUsed.toString()}`);
+
+console.log('\n=== Health Summary ===');
+if (metrics.health.alerts.length > 0) {
+  console.log('Active Alerts:');
+  metrics.health.alerts.forEach((alert, index) => {
+    console.log(`  ${index + 1}. [${alert.level}] ${alert.type}: ${alert.message}`);
+  });
+}
+
+if (metrics.health.recommendations.length > 0) {
+  console.log('\nRecommendations:');
+  metrics.health.recommendations.forEach((rec, index) => {
+    console.log(`  ${index + 1}. ${rec}`);
+  });
+}6:T9d3,const { generateMetrics } = require('@wakeuplabs/op-interop-alerts-sdk');
+
+// Sample tracking results (normally collected from startTracking)
+const trackingResults = [
+  // ... your tracking results from monitoring
+];
+
+// Optional configuration for metrics generation
+const metricsConfig = {
+  expectedLatencyMs: 30000,    // Expected latency threshold (30 seconds)
+  severeLatencyMs: 120000,     // Severe latency threshold (2 minutes)
+  expectedGasLimit: 100000n,   // Expected gas limit
+  healthThresholds: {
+    successRateWarning: 0.95,  // Warn if success rate < 95%
+    successRateCritical: 0.90, // Critical if success rate < 90%
+    latencyWarningMs: 60000,   // Warn if latency > 1 minute
+    latencyCriticalMs: 180000  // Critical if latency > 3 minutes
+  }
+};
+
+// Generate comprehensive metrics
+const metrics = generateMetrics(trackingResults, metricsConfig);
+
+// Access different metric categories
+console.log('=== System Status ===');
+console.log('Interop Status:', metrics.status.interopStatus);
+console.log('Health Level:', metrics.status.healthLevel);
+console.log('Timing Status:', metrics.status.timingStatus);
+
+console.log('\n=== Throughput Metrics ===');
+const throughput = metrics.coreMetrics.throughput;
+console.log(`Total Messages: ${throughput.totalMessages}`);
+console.log(`Success Rate: ${throughput.successRate.toFixed(2)}%`);
+console.log(`Messages/Hour: ${throughput.messagesPerHour.toFixed(2)}`);
+
+console.log('\n=== Latency Metrics ===');
+const latency = metrics.coreMetrics.latency;
+console.log(`Average: ${(latency.averageLatencyMs / 1000).toFixed(2)}s`);
+console.log(`Median: ${(latency.medianLatencyMs / 1000).toFixed(2)}s`);
+console.log(`P95: ${(latency.p95LatencyMs / 1000).toFixed(2)}s`);
+console.log(`P99: ${(latency.p99LatencyMs / 1000).toFixed(2)}s`);
+
+console.log('\n=== Gas Metrics ===');
+const gas = metrics.coreMetrics.gas;
+console.log(`Avg Send Gas: ${gas.averageSendGas.toString()}`);
+console.log(`Avg Relay Gas: ${gas.averageRelayGas.toString()}`);
+console.log(`Total Gas Used: ${gas.totalGasUsed.toString()}`);
+
+console.log('\n=== Health Summary ===');
+if (metrics.health.alerts.length > 0) {
+  console.log('Active Alerts:');
+  metrics.health.alerts.forEach((alert, index) => {
+    console.log(`  ${index + 1}. [${alert.level}] ${alert.type}: ${alert.message}`);
+  });
+}
+
+if (metrics.health.recommendations.length > 0) {
+  console.log('\nRecommendations:');
+  metrics.health.recommendations.forEach((rec, index) => {
+    console.log(`  ${index + 1}. ${rec}`);
+  });
+}7:Tc02,import { 
+  startTracking, 
+  generateMetrics,
+  TrackingResult,
+  InteropMetrics
+} from '@wakeuplabs/op-interop-alerts-sdk';
+import { chainsInfoMock } from '@wakeuplabs/op-interop-alerts-sdk/config';
+
+const pksInfo = {
+  origin: process.env.ORIGIN_PRIVATE_KEY as `0x${string}`,
+  destination: process.env.DESTINATION_PRIVATE_KEY as `0x${string}`,
+};
+
+// Store tracking results for metrics generation
+const trackingResults: TrackingResult[] = [];
+const METRICS_THRESHOLD = 5; // Generate metrics after 5 data points
+
+const trackingCallback = (result: TrackingResult) => {
+  console.log(`[${result.timestamp.toISOString()}] Tracking: ${result.success ? '✅' : '❌'}`);
+  
+  // Store the result
+  trackingResults.push(result);
+  
+  // Generate metrics when we have enough data
+  if (trackingResults.length >= METRICS_THRESHOLD) {
+    generateAndDisplayMetrics();
+  }
+};
+
+function generateAndDisplayMetrics() {
+  try {
+    const metrics: InteropMetrics = generateMetrics(trackingResults);
+    
+    console.log('\n📊 === METRICS REPORT ===');
+    console.log(`Status: ${metrics.status.interopStatus} (${metrics.status.healthLevel})`);
+    console.log(`Data Points: ${metrics.status.totalDataPoints}`);
+    
+    // Throughput summary
+    const throughput = metrics.coreMetrics.throughput;
+    console.log(`\n🚀 Throughput: ${throughput.successRate.toFixed(1)}% success rate`);
+    console.log(`   Messages: ${throughput.successfulMessages}/${throughput.totalMessages}`);
+    console.log(`   Rate: ${throughput.messagesPerHour.toFixed(1)} msg/hour`);
+    
+    // Latency summary
+    const latency = metrics.coreMetrics.latency;
+    console.log(`\n⏱️  Latency: ${(latency.averageLatencyMs / 1000).toFixed(1)}s avg`);
+    console.log(`   P95: ${(latency.p95LatencyMs / 1000).toFixed(1)}s`);
+    console.log(`   Range: ${(latency.minLatencyMs / 1000).toFixed(1)}s - ${(latency.maxLatencyMs / 1000).toFixed(1)}s`);
+    
+    // Gas summary
+    const gas = metrics.coreMetrics.gas;
+    console.log(`\n⛽ Gas: ${gas.averageSendGas.toString()} send, ${gas.averageRelayGas.toString()} relay`);
+    
+    // Health alerts
+    if (metrics.health.alerts.length > 0) {
+      console.log(`\n🚨 Alerts:`);
+      metrics.health.alerts.forEach(alert => {
+        console.log(`   [${alert.level}] ${alert.message}`);
+      });
+    }
+    
+    // Recommendations
+    if (metrics.health.recommendations.length > 0) {
+      console.log(`\n💡 Recommendations:`);
+      metrics.health.recommendations.forEach(rec => {
+        console.log(`   • ${rec}`);
+      });
+    }
+    
+    console.log('=== END REPORT ===\n');
+    
+  } catch (error) {
+    console.error('❌ Error generating metrics:', error);
+  }
+}
+
+// Start monitoring with metrics
+async function main() {
+  console.log('🚀 Starting monitoring with metrics generation...');
+  console.log(`📊 Will generate metrics after ${METRICS_THRESHOLD} data points\n`);
+  
+  try {
+    await startTracking(chainsInfoMock, pksInfo, trackingCallback, 5);
+  } catch (error) {
+    console.error('❌ Monitoring failed:', error);
+  }
+}
+
+main();8:Tb94,const { 
+  startTracking, 
+  generateMetrics
+} = require('@wakeuplabs/op-interop-alerts-sdk');
+const { chainsInfoMock } = require('@wakeuplabs/op-interop-alerts-sdk/config');
+
+const pksInfo = {
+  origin: process.env.ORIGIN_PRIVATE_KEY,
+  destination: process.env.DESTINATION_PRIVATE_KEY,
+};
+
+// Store tracking results for metrics generation
+const trackingResults = [];
+const METRICS_THRESHOLD = 5; // Generate metrics after 5 data points
+
+const trackingCallback = (result) => {
+  console.log(`[${result.timestamp.toISOString()}] Tracking: ${result.success ? '✅' : '❌'}`);
+  
+  // Store the result
+  trackingResults.push(result);
+  
+  // Generate metrics when we have enough data
+  if (trackingResults.length >= METRICS_THRESHOLD) {
+    generateAndDisplayMetrics();
+  }
+};
+
+function generateAndDisplayMetrics() {
+  try {
+    const metrics = generateMetrics(trackingResults);
+    
+    console.log('\n📊 === METRICS REPORT ===');
+    console.log(`Status: ${metrics.status.interopStatus} (${metrics.status.healthLevel})`);
+    console.log(`Data Points: ${metrics.status.totalDataPoints}`);
+    
+    // Throughput summary
+    const throughput = metrics.coreMetrics.throughput;
+    console.log(`\n🚀 Throughput: ${throughput.successRate.toFixed(1)}% success rate`);
+    console.log(`   Messages: ${throughput.successfulMessages}/${throughput.totalMessages}`);
+    console.log(`   Rate: ${throughput.messagesPerHour.toFixed(1)} msg/hour`);
+    
+    // Latency summary
+    const latency = metrics.coreMetrics.latency;
+    console.log(`\n⏱️  Latency: ${(latency.averageLatencyMs / 1000).toFixed(1)}s avg`);
+    console.log(`   P95: ${(latency.p95LatencyMs / 1000).toFixed(1)}s`);
+    console.log(`   Range: ${(latency.minLatencyMs / 1000).toFixed(1)}s - ${(latency.maxLatencyMs / 1000).toFixed(1)}s`);
+    
+    // Gas summary
+    const gas = metrics.coreMetrics.gas;
+    console.log(`\n⛽ Gas: ${gas.averageSendGas.toString()} send, ${gas.averageRelayGas.toString()} relay`);
+    
+    // Health alerts
+    if (metrics.health.alerts.length > 0) {
+      console.log(`\n🚨 Alerts:`);
+      metrics.health.alerts.forEach(alert => {
+        console.log(`   [${alert.level}] ${alert.message}`);
+      });
+    }
+    
+    // Recommendations
+    if (metrics.health.recommendations.length > 0) {
+      console.log(`\n💡 Recommendations:`);
+      metrics.health.recommendations.forEach(rec => {
+        console.log(`   • ${rec}`);
+      });
+    }
+    
+    console.log('=== END REPORT ===\n');
+    
+  } catch (error) {
+    console.error('❌ Error generating metrics:', error);
+  }
+}
+
+// Start monitoring with metrics
+async function main() {
+  console.log('🚀 Starting monitoring with metrics generation...');
+  console.log(`📊 Will generate metrics after ${METRICS_THRESHOLD} data points\n`);
+  
+  try {
+    await startTracking(chainsInfoMock, pksInfo, trackingCallback, 5);
+  } catch (error) {
+    console.error('❌ Monitoring failed:', error);
+  }
+}
+
+main();0:["vaz_tpm5HaGxb8wvZm7sd",[[["",{"children":["metrics",{"children":["__PAGE__",{}]}]},"$undefined","$undefined",true],["",{"children":["metrics",{"children":["__PAGE__",{},[["$L1",["$","div",null,{"className":"max-w-none sm:max-w-4xl mx-auto","children":[["$","div",null,{"className":"mb-8","children":[["$","div",null,{"className":"flex items-center space-x-3 mb-4","children":[["$","div",null,{"className":"w-10 h-10 bg-orange/10 rounded-lg flex items-center justify-center","children":["$","svg",null,{"xmlns":"http://www.w3.org/2000/svg","width":24,"height":24,"viewBox":"0 0 24 24","fill":"none","stroke":"currentColor","strokeWidth":2,"strokeLinecap":"round","strokeLinejoin":"round","className":"lucide lucide-bar-chart3 w-5 h-5 text-orange","children":[["$","path","1s2lah",{"d":"M3 3v18h18"}],["$","path","2bz60n",{"d":"M18 17V9"}],["$","path","1frdt8",{"d":"M13 17V5"}],["$","path","17ska0",{"d":"M8 17v-3"}],"$undefined"]}]}],["$","h1",null,{"className":"text-3xl font-bold text-midnight","children":"Metrics Module"}]]}],["$","p",null,{"className":"text-lg text-gray-600","children":"Transform raw tracking data into actionable insights with comprehensive metrics including latency analysis, throughput calculations, gas usage, and system health indicators."}]]}],["$","div",null,{"className":"mb-8","children":[["$","h2",null,{"className":"text-2xl font-bold text-gray-900 mb-4","children":"Overview"}],["$","p",null,{"className":"text-gray-600 mb-6","children":"The Metrics Module analyzes tracking data to provide operational intelligence for cross-chain messaging. It generates structured metrics that help you understand system performance and identify potential issues."}],["$","div",null,{"className":"grid gap-4 sm:gap-6 sm:grid-cols-2 mb-6","children":[["$","div",null,{"className":"bg-white border border-gray-200 rounded-lg text-sm sm:text-base p-2 sm:p-4 md:p-6 ","children":[["$","div",null,{"className":"flex items-center space-x-2 sm:space-x-3 mb-3","children":[["$","svg",null,{"xmlns":"http://www.w3.org/2000/svg","width":24,"height":24,"viewBox":"0 0 24 24","fill":"none","stroke":"currentColor","strokeWidth":2,"strokeLinecap":"round","strokeLinejoin":"round","className":"lucide lucide-trending-up w-4 h-4 sm:w-5 sm:h-5 text-orange","children":[["$","polyline","126l90",{"points":"22 7 13.5 15.5 8.5 10.5 2 17"}],["$","polyline","kwv8wd",{"points":"16 7 22 7 22 13"}],"$undefined"]}],["$","h3",null,{"className":"text-base sm:text-lg font-semibold text-gray-900","children":"Core Metrics"}]]}],["$","ul",null,{"className":"space-y-1 text-xs sm:text-sm text-gray-600","children":[["$","li",null,{"children":"• Latency analysis with percentiles"}],["$","li",null,{"children":"• Throughput and success rates"}],["$","li",null,{"children":"• Gas usage statistics"}],["$","li",null,{"children":"• Message timing analysis"}]]}]]}],["$","div",null,{"className":"bg-white border border-gray-200 rounded-lg text-sm sm:text-base p-2 sm:p-4 md:p-6 ","children":[["$","div",null,{"className":"flex items-center space-x-2 sm:space-x-3 mb-3","children":[["$","svg",null,{"xmlns":"http://www.w3.org/2000/svg","width":24,"height":24,"viewBox":"0 0 24 24","fill":"none","stroke":"currentColor","strokeWidth":2,"strokeLinecap":"round","strokeLinejoin":"round","className":"lucide lucide-triangle-alert w-4 h-4 sm:w-5 sm:h-5 text-orange","children":[["$","path","wmoenq",{"d":"m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"}],["$","path","juzpu7",{"d":"M12 9v4"}],["$","path","p32p05",{"d":"M12 17h.01"}],"$undefined"]}],["$","h3",null,{"className":"text-base sm:text-lg font-semibold text-gray-900","children":"Health Monitoring"}]]}],["$","ul",null,{"className":"space-y-1 text-xs sm:text-sm text-gray-600","children":[["$","li",null,{"children":"• System status determination"}],["$","li",null,{"children":"• Error rate analysis"}],["$","li",null,{"children":"• Health alerts generation"}],["$","li",null,{"children":"• Performance recommendations"}]]}]]}]]}]]}],["$","div",null,{"className":"mb-8","children":[["$","h2",null,{"className":"text-2xl font-bold text-gray-900 mb-4","children":"generateMetrics"}],["$","p",null,{"className":"text-gray-600 mb-6","children":"The main function that processes tracking data and returns comprehensive metrics. It analyzes all successful and failed tracking attempts to provide insights."}],["$","div",null,{"className":"bg-orange/5 border border-orange/20 rounded-lg p-4 mb-6","children":["$","div",null,{"className":"flex items-start space-x-3","children":[["$","svg",null,{"xmlns":"http://www.w3.org/2000/svg","width":24,"height":24,"viewBox":"0 0 24 24","fill":"none","stroke":"currentColor","strokeWidth":2,"strokeLinecap":"round","strokeLinejoin":"round","className":"lucide lucide-info w-5 h-5 text-orange mt-0.5 flex-shrink-0","children":[["$","circle","1mglay",{"cx":"12","cy":"12","r":"10"}],["$","path","1dtifu",{"d":"M12 16v-4"}],["$","path","e9boi3",{"d":"M12 8h.01"}],"$undefined"]}],["$","div",null,{"children":[["$","h3",null,{"className":"font-semibold text-midnight mb-1","children":"Function Signature"}],["$","code",null,{"className":"text-gray-700 text-sm","children":"generateMetrics(trackingResults: TrackingResult[], config?: MetricsConfig): InteropMetrics"}]]}]]}]}],["$","$L2",null,{"children":[["$","$L3",null,{"label":"TypeScript","children":["$","$L4",null,{"language":"typescript","children":"$5"}]}],["$","$L3",null,{"label":"JavaScript","children":["$","$L4",null,{"language":"javascript","children":"$6"}]}]]}]]}],["$","div",null,{"className":"mb-8","children":[["$","h2",null,{"className":"text-2xl font-bold text-gray-900 mb-4","children":"Complete Example"}],["$","p",null,{"className":"text-gray-600 mb-6","children":"Here's a complete example that combines tracking with metrics generation:"}],["$","$L2",null,{"children":[["$","$L3",null,{"label":"TypeScript","children":["$","$L4",null,{"language":"typescript","children":"$7"}]}],["$","$L3",null,{"label":"JavaScript","children":["$","$L4",null,{"language":"javascript","children":"$8"}]}]]}]]}],["$","div",null,{"className":"bg-orange/5 border border-orange/20 rounded-lg p-6","children":[["$","h2",null,{"className":"text-xl font-bold text-gray-900 mb-4","children":"Next Steps"}],["$","p",null,{"className":"text-gray-700 mb-4","children":"Now that you understand metrics generation, learn how to set up intelligent alerts based on your metrics:"}],["$","div",null,{"className":"flex flex-col sm:flex-row gap-3","children":[["$","$L9",null,{"href":"/alerts","className":"inline-flex items-center px-4 py-2 bg-orange text-white font-medium rounded-lg hover:bg-orange/80 transition-colors","children":["Alerts Module",["$","svg",null,{"xmlns":"http://www.w3.org/2000/svg","width":24,"height":24,"viewBox":"0 0 24 24","fill":"none","stroke":"currentColor","strokeWidth":2,"strokeLinecap":"round","strokeLinejoin":"round","className":"lucide lucide-arrow-right w-4 h-4 ml-2","children":[["$","path","1ays0h",{"d":"M5 12h14"}],["$","path","xquz4c",{"d":"m12 5 7 7-7 7"}],"$undefined"]}]]}],["$","$L9",null,{"href":"/examples","className":"inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors","children":["View Examples",["$","svg",null,{"xmlns":"http://www.w3.org/2000/svg","width":24,"height":24,"viewBox":"0 0 24 24","fill":"none","stroke":"currentColor","strokeWidth":2,"strokeLinecap":"round","strokeLinejoin":"round","className":"lucide lucide-arrow-right w-4 h-4 ml-2","children":[["$","path","1ays0h",{"d":"M5 12h14"}],["$","path","xquz4c",{"d":"m12 5 7 7-7 7"}],"$undefined"]}]]}]]}]]}]]}]],null],null]},["$","$La",null,{"parallelRouterKey":"children","segmentPath":["children","metrics","children"],"error":"$undefined","errorStyles":"$undefined","errorScripts":"$undefined","template":["$","$Lb",null,{}],"templateStyles":"$undefined","templateScripts":"$undefined","notFound":"$undefined","notFoundStyles":"$undefined","styles":null}],null]},[["$","html",null,{"lang":"en","children":["$","body",null,{"className":"__className_1ef16e","children":["$","div",null,{"className":"min-h-screen bg-white","children":[["$","$Lc",null,{}],["$","div",null,{"className":"flex","children":[["$","aside",null,{"className":"hidden md:block w-64 flex-shrink-0","children":["$","div",null,{"className":"sticky top-16 h-screen overflow-y-auto","children":["$","$Ld",null,{}]}]}],["$","main",null,{"className":"flex-1 max-w-none","children":["$","div",null,{"className":"pl-4 pr-4 sm:pl-6 sm:pr-6 lg:pl-8 lg:pr-8 py-8","children":["$","$La",null,{"parallelRouterKey":"children","segmentPath":["children"],"error":"$undefined","errorStyles":"$undefined","errorScripts":"$undefined","template":["$","$Lb",null,{}],"templateStyles":"$undefined","templateScripts":"$undefined","notFound":[["$","title",null,{"children":"404: This page could not be found."}],["$","div",null,{"style":{"fontFamily":"system-ui,\"Segoe UI\",Roboto,Helvetica,Arial,sans-serif,\"Apple Color Emoji\",\"Segoe UI Emoji\"","height":"100vh","textAlign":"center","display":"flex","flexDirection":"column","alignItems":"center","justifyContent":"center"},"children":["$","div",null,{"children":[["$","style",null,{"dangerouslySetInnerHTML":{"__html":"body{color:#000;background:#fff;margin:0}.next-error-h1{border-right:1px solid rgba(0,0,0,.3)}@media (prefers-color-scheme:dark){body{color:#fff;background:#000}.next-error-h1{border-right:1px solid rgba(255,255,255,.3)}}"}}],["$","h1",null,{"className":"next-error-h1","style":{"display":"inline-block","margin":"0 20px 0 0","padding":"0 23px 0 0","fontSize":24,"fontWeight":500,"verticalAlign":"top","lineHeight":"49px"},"children":"404"}],["$","div",null,{"style":{"display":"inline-block"},"children":["$","h2",null,{"style":{"fontSize":14,"fontWeight":400,"lineHeight":"49px","margin":0},"children":"This page could not be found."}]}]]}]}]],"notFoundStyles":[],"styles":null}]}]}]]}],["$","footer",null,{"className":"bg-gray-50 border-t border-gray-300","children":["$","div",null,{"className":"px-4 sm:px-6 lg:px-8 py-8","children":["$","div",null,{"className":"flex flex-col md:flex-row justify-between items-center","children":[["$","div",null,{"className":"flex items-center space-x-4 mb-6 md:mb-0","children":[["$","img",null,{"src":"/logo-wu.png","alt":"WakeUp Labs","className":"h-8 w-auto"}],["$","div",null,{"className":"flex flex-col","children":[["$","span",null,{"className":"text-sm font-medium text-midnight","children":"OP Interop Alerts SDK"}],["$","span",null,{"className":"text-xs text-gray-500","children":"Cross-chain monitoring documentation"}]]}]]}],["$","div",null,{"className":"flex items-center space-x-4","children":[["$","a",null,{"href":"https://www.npmjs.com/package/@wakeuplabs/op-interop-alerts-sdk","target":"_blank","rel":"noopener noreferrer","className":"hover:opacity-80 transition-opacity p-2","title":"NPM Package","children":["$","img",null,{"src":"/npm-logo-red.png","alt":"NPM","className":"h-4 w-auto"}]}],["$","a",null,{"href":"https://github.com/wakeuplabs-io/op-interop-alerts","target":"_blank","rel":"noopener noreferrer","className":"hover:opacity-80 transition-opacity p-2","title":"GitHub Repository","children":["$","img",null,{"src":"/github-mark.png","alt":"GitHub","className":"h-5 w-auto"}]}],["$","a",null,{"href":"https://wakeuplabs.io","target":"_blank","rel":"noopener noreferrer","className":"hover:opacity-80 transition-opacity p-2","title":"WakeUp Labs","children":["$","img",null,{"src":"/logo-wu-isotype.png","alt":"WakeUp Labs","className":"h-4 w-auto"}]}]]}]]}]}]}]]}]}]}],null],null],[[["$","link","0",{"rel":"stylesheet","href":"/op-interop-alerts/_next/static/css/d8d0d207bb4bc00b.css","precedence":"next","crossOrigin":"$undefined"}]],[null,"$Le"]]]]]
+e:[["$","meta","0",{"name":"viewport","content":"width=device-width, initial-scale=1"}],["$","meta","1",{"charSet":"utf-8"}],["$","title","2",{"children":"Metrics Module | OP Interop Alerts SDK"}],["$","meta","3",{"name":"description","content":"Learn how to use the Metrics Module to generate comprehensive analytics from cross-chain tracking data."}],["$","meta","4",{"name":"author","content":"WakeUp Labs"}],["$","meta","5",{"name":"keywords","content":"optimism,superchain,cross-chain,interoperability,monitoring,alerts,l2,ethereum"}],["$","meta","6",{"name":"creator","content":"WakeUp Labs"}],["$","meta","7",{"property":"og:title","content":"OP Interop Alerts SDK"}],["$","meta","8",{"property":"og:description","content":"TypeScript SDK for monitoring cross-chain interoperability across Optimism Superchain"}],["$","meta","9",{"property":"og:url","content":"https://wakeuplabs-io.github.io/op-interop-alerts/"}],["$","meta","10",{"property":"og:site_name","content":"OP Interop Alerts SDK"}],["$","meta","11",{"property":"og:locale","content":"en_US"}],["$","meta","12",{"property":"og:type","content":"website"}],["$","meta","13",{"name":"twitter:card","content":"summary_large_image"}],["$","meta","14",{"name":"twitter:title","content":"OP Interop Alerts SDK"}],["$","meta","15",{"name":"twitter:description","content":"TypeScript SDK for monitoring cross-chain interoperability across Optimism Superchain"}],["$","link","16",{"rel":"shortcut icon","href":"/favicon-wu.svg"}],["$","link","17",{"rel":"icon","href":"/favicon-wu.svg"}],["$","link","18",{"rel":"apple-touch-icon","href":"/favicon-wu.svg"}],["$","meta","19",{"name":"next-size-adjust"}]]
+1:null
