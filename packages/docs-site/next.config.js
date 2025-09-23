@@ -5,8 +5,10 @@ const nextConfig = {
   images: {
     unoptimized: true
   },
-  basePath: process.env.NODE_ENV === 'production' ? '/op-interop-alerts' : '',
-  assetPrefix: process.env.NODE_ENV === 'production' ? '/op-interop-alerts' : '',
+  // Remove basePath and assetPrefix for Amplify deployment
+  // These are typically handled by Amplify's hosting configuration
+  basePath: '',
+  assetPrefix: '',
 }
 
 module.exports = nextConfig
