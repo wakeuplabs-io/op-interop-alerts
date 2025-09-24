@@ -1,6 +1,6 @@
 import { ChainsInfo, PKsInfo } from "../config";
-import { sendPing } from "./sendPing";
-import { waitForRelayedMessage } from "./waitForRelayedMessage";
+import { sendPing, SendPingFailedResult } from "./sendPing";
+import { waitForRelayedMessage, WaitForRelayedMessageFailedResult } from "./waitForRelayedMessage";
 import { Log, GetContractEventsReturnType, ParseEventLogsReturnType } from "viem";
 import { l2ToL2CrossDomainMessengerAbi } from "../abis/generated";
 
@@ -42,7 +42,6 @@ export interface TrackingCallbackData {
     relayMessage: RelayedMessageEventData;
 }
 
-// Keep EventData for backward compatibility
 export interface EventData {
     logs: Log[];
     gasUsed: bigint;
@@ -50,7 +49,15 @@ export interface EventData {
     transactionHash: `0x${string}`;
 }
 
-export type TrackingCallback = (data: TrackingCallbackData) => void;
+// Unified tracking result type
+export interface TrackingResult {
+    timestamp: Date;
+    success: boolean;
+    data?: TrackingCallbackData;
+    error?: SendPingFailedResult | WaitForRelayedMessageFailedResult;
+}
+
+export type TrackingCallback = (result: TrackingResult) => void;
 
 const MINUTE = 60 * 1000;
 
@@ -61,13 +68,59 @@ export async function startTracking (
     intervalMinutes: number = 10,
 ) {
     while (true) {
+        const cycleTimestamp = new Date();
         const sentResult = await sendPing(chainsInfo, pksInfo);
-        const relayResult = await waitForRelayedMessage(chainsInfo, sentResult.sentMessageSender, sentResult.sentMessagePayload);
+        
+        if (sentResult.status !== 'SUCCESS') {
+            console.error('❌ Failed to send ping:', sentResult.error.message);
+            
+            if (callback) {
+                callback({
+                    timestamp: cycleTimestamp,
+                    success: false,
+                    error: sentResult
+                });
+            }
+            
+            console.log('');
+            console.log("=== 🔄 Waiting for next tracking cycle ===");
+            console.log('');
+            await wait(intervalMinutes * MINUTE);
+            continue;
+        }
+
+        const relayResult = await waitForRelayedMessage(
+            chainsInfo, 
+            sentResult.data.sentMessageSender, 
+            sentResult.data.sentMessagePayload
+        );
+
+        if (relayResult.status !== 'SUCCESS') {
+            console.error('❌ Failed to wait for relayed message:', relayResult.error.message);
+            
+            if (callback) {
+                callback({
+                    timestamp: cycleTimestamp,
+                    success: false,
+                    error: relayResult
+                });
+            }
+            
+            console.log('');
+            console.log("=== 🔄 Waiting for next tracking cycle ===");
+            console.log('');
+            await wait(intervalMinutes * MINUTE);
+            continue;
+        }
 
         if (callback) {
             callback({
-                sentMessage: sentResult.eventData,
-                relayMessage: relayResult.eventData
+                timestamp: cycleTimestamp,
+                success: true,
+                data: {
+                    sentMessage: sentResult.data.eventData,
+                    relayMessage: relayResult.data.eventData
+                }
             });
         }
 

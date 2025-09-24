@@ -1,3 +1,5 @@
+import { ChainsInfo } from "@wakeuplabs/op-interop-alerts-sdk/config";
+
 /**
  * Format time difference in a human-readable way with consistent format
  * @param ms Time difference in milliseconds
@@ -32,3 +34,17 @@ export const formatTimeDifference = (ms: number): string => {
     
     return `${sign}${parts.join(' ')}`;
 };
+
+export const chainsInfoOpSepoliaToBaseSepolia: ChainsInfo = {
+    chainOrigin: {
+        rpcUrl: "https://sepolia.optimism.io",
+        chainId: 11155420,
+        l2CrossDomainMessenger: "0x5fa8f9b682061e5610498396bb6f8b5f51865d06",
+    },
+    chainDestination: {
+        rpcUrl: "https://base-sepolia.g.alchemy.com/v2/RIiPWUo_3q3FPNciqRon2QmVIUmExg9p",
+        chainId: 84532,
+        messageReceiver: "0x1f77040905bb10b5ff623846082bd1fd7a3ddf9b",
+        l2CrossDomainMessenger: "0x92c6145cb183d6801b07bba47a18bf44668b2d5b",
+    },
+}

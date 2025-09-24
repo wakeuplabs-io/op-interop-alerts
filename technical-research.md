@@ -175,7 +175,7 @@ Encapsulates the messagePing primitive and produces a PingResult for each execut
 
 ## Metrics Generation Module
 
-Builds aggregated metrics from collections of PingResult. Functions compute latency distributions (P50, P95), success/failure/timeout rates, and overall interop status (active | paused | degraded) per chain pair and time window. This replaces the old "listen to arbitrary events" model with deterministic, synthetic measurement based on canonical pings.
+Builds aggregated metrics from collections of PingResult. Functions compute latency distributions (P50, P95), success/failure/timeout rates, and overall interop status (active | degraded) per chain pair and time window. This replaces the old "listen to arbitrary events" model with deterministic, synthetic measurement based on canonical pings.
 
 ## Alert Generation Module
 

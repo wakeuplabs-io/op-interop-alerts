@@ -1,89 +1,169 @@
-# OP Interop Alerts SDK Example (TypeScript)
+# OP Interop Alerts Example
 
-This is a TypeScript example package that demonstrates how to use the `@wakeuplabs/op-interop-alerts-sdk` to track cross-chain message relaying between Optimism L2 chains.
+Este ejemplo demuestra cómo usar el SDK de OP Interop Alerts con el nuevo sistema de alertas y notificaciones de Slack.
 
-## Features
+## Funcionalidades
 
-- Written in TypeScript with full type safety
-- Uses environment variables for secure configuration
-- Imports the SDK from npm
-- Configures chain information for origin and destination chains
-- Starts the tracking process with a configurable interval
+- **Seguimiento de Interoperabilidad**: Monitorea mensajes entre cadenas usando el SDK
+- **Generación de Métricas**: Calcula métricas de rendimiento, latencia, throughput y salud del sistema
+- **Sistema de Alertas**: Evalúa reglas de alertas automáticamente basadas en las métricas
+- **Notificaciones de Slack**: Envía alertas a Slack usando webhooks
+- **Reportes de Estado**: Envía un mensaje "Status OK" cada 10 iteraciones cuando todo funciona correctamente
 
-## Setup
+## Configuración
 
-1. Install dependencies:
+### 1. Variables de Entorno Requeridas
 
-   ```bash
-   npm install
-   ```
-
-2. Set up environment variables:
-
-   ```bash
-   cp env.example .env
-   ```
-
-3. Edit the `.env` file with your configuration:
-
-   ```bash
-   # Required: Add your private keys
-   ORIGIN_PRIVATE_KEY=0x...
-   DESTINATION_PRIVATE_KEY=0x...
-   
-   # Tracking Configuration (Optional)
-   TRACKING_INTERVAL_MINUTES=10
-   ```
-
-## Usage
-
-### Build and run
+Copia `env.example` a `.env` y configura las siguientes variables:
 
 ```bash
-npm start
+# Claves privadas (Requeridas)
+ORIGIN_PRIVATE_KEY=0x...
+DESTINATION_PRIVATE_KEY=0x...
+
+# Configuración de seguimiento (Opcional)
+TRACKING_INTERVAL_MINUTES=10
 ```
 
-### Development mode with auto-rebuild
+### 2. Configuración de Slack (Opcional)
+
+Para habilitar las notificaciones de Slack, configura un webhook:
+
+#### Configuración de Webhook URL
+
+1. Ve a tu workspace de Slack
+2. Crea una nueva aplicación en [https://api.slack.com/apps](https://api.slack.com/apps)
+3. Habilita "Incoming Webhooks"
+4. Crea un webhook para el canal deseado
+5. Agrega la URL a tu archivo `.env`:
 
 ```bash
+SLACK_WEBHOOK_URL=https://hooks.slack.com/services/YOUR/WEBHOOK/URL
+```
+
+### 3. Configuración Adicional de Slack
+
+```bash
+# Canal donde enviar las alertas (por defecto: #alerts)
+SLACK_CHANNEL=#alerts
+
+# Nombre del bot (por defecto: OP Interop Alerts)
+SLACK_USERNAME=OP Interop Alerts
+
+# Emoji del bot (por defecto: :warning:)
+SLACK_ICON_EMOJI=:warning:
+```
+
+## Tipos de Alertas
+
+El sistema incluye las siguientes reglas de alertas predefinidas:
+
+### Alertas de Latencia
+
+- **High Latency**: Cuando la latencia promedio excede 30 segundos
+- **Critical Latency**: Cuando la latencia promedio excede 2 minutos
+
+### Alertas de Throughput
+
+- **Low Success Rate**: Cuando la tasa de éxito baja del 95%
+- **Critical Success Rate**: Cuando la tasa de éxito baja del 80%
+
+### Alertas de Errores
+
+- **High Error Rate**: Cuando la tasa de errores excede el 5%
+
+### Alertas de Estado del Sistema
+
+- **System Down**: Cuando el estado de interoperabilidad es "DOWN"
+- **System Degraded**: Cuando el estado es "DEGRADED" por más de 5 minutos
+
+### Alertas de Gas y Timing
+
+- **High Gas Usage**: Cuando el uso de gas promedio es inusualmente alto
+- **Severe Timing Delays**: Cuando hay retrasos severos en el timing de mensajes
+
+## Uso
+
+### Instalación
+
+```bash
+npm install
+```
+
+### Ejecutar el ejemplo
+
+```bash
+# Modo desarrollo (con recarga automática)
 npm run dev
+
+# Modo producción
+npm run start
 ```
 
-### Build only
+## Formato de Alertas en Slack
+
+Las alertas en Slack incluyen:
+
+- **Título y severidad** del alerta
+- **Categoría** (Latency, Throughput, Error Rate, etc.)
+- **Timestamp** de cuando ocurrió
+- **Mensaje descriptivo** con detalles específicos
+- **Métricas actuales** relevantes al alerta
+- **Ventana de datos** utilizada para el análisis
+
+### Ejemplo de Alerta en Slack
 
 ```bash
-npm run build
+🚨 High Latency Alert
+Severity: HIGH
+Category: LATENCY
+Time: 2024-01-15T14:30:00.000Z
+Message: Triggers when average latency exceeds threshold. Current averageLatencyMs: 35.2s.
+
+📊 Current Metrics:
+• Status: OPERATIONAL
+• Health: GOOD
+• averageLatencyMs: 35.2s
+
+⏱️ Data Window: 60 minutes
 ```
 
-## Environment Variables
+## Personalización
 
-### Required
+### Modificar Reglas de Alertas
 
-- `ORIGIN_PRIVATE_KEY`: Private key for the origin chain account
-- `DESTINATION_PRIVATE_KEY`: Private key for the destination chain account
+Puedes personalizar las reglas de alertas modificando el array `DEFAULT_ALERT_RULES` o creando tus propias reglas usando `createAlertRule()`.
 
-### Optional (with defaults)
+### Agregar Nuevos Canales de Notificación
 
-- `TRACKING_INTERVAL_MINUTES`: Minutes between tracking cycles (default: 10)
+El sistema soporta múltiples canales. Puedes extender `createSimpleNotificationCallback()` para agregar email, SMS, Discord, etc.
 
-## Security
+## Monitoreo y Logs
 
-⚠️ **Important Security Notes:**
+El ejemplo proporciona logs detallados incluyendo:
 
-- Never commit your `.env` file to version control
-- The example private keys in `env.example` are for testing only
-- Use secure, unique private keys for production environments
-- Keep your private keys secure and never share them
+- Resultados de seguimiento de mensajes
+- Métricas generadas
+- Evaluación de reglas de alertas
+- Estado de notificaciones de Slack
+- Resumen de alertas disparadas
 
-## What it does
+## Solución de Problemas
 
-The tracking process:
+### Slack no recibe notificaciones
 
-1. Loads configuration from environment variables
-2. Validates required private keys are present
-3. Sends a ping message from the origin chain to the destination chain
-4. Waits for the message to be relayed and processed
-5. Logs the results with detailed information
-6. Waits for the specified interval before repeating
+1. Verifica que `SLACK_WEBHOOK_URL` o `SLACK_BOT_TOKEN` esté configurado correctamente
+2. Asegúrate de que el webhook/bot tenga permisos para el canal especificado
+3. Revisa los logs para errores específicos de la API de Slack
 
-This helps monitor the health and performance of cross-chain message relaying in the OP Stack interoperability system.
+### No se generan alertas
+
+1. Verifica que `METRICS_THRESHOLD` esté configurado apropiadamente
+2. Asegúrate de que las condiciones de las reglas se cumplan
+3. Revisa los logs de "Alert Processing Summary" para detalles
+
+### Errores de seguimiento
+
+1. Verifica que las claves privadas sean válidas
+2. Asegúrate de que las cadenas estén funcionando correctamente
+3. Revisa la configuración de RPC endpoints en el SDK
