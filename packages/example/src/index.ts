@@ -11,14 +11,30 @@ import {
     createSimpleNotificationCallback,
     DEFAULT_ALERT_RULES,
     AlertNotification,
+    AlertNotificationCallback,
     NotificationChannel
 } from '@wakeuplabs/op-interop-alerts-sdk';
-import { chainsInfoMock as chainsInfo } from '@wakeuplabs/op-interop-alerts-sdk/config';
+import { chainsInfoOpSepoliaToBaseSepolia as chainsInfo } from './utils';
 import { config } from 'dotenv';
 import { formatTimeDifference } from './utils';
 
 // Load environment variables
 config();
+
+/**
+ * OP Interop Alerts Example - New Flexible Notification System
+ * 
+ * With the updated SDK, developers have complete control over how alerts are handled.
+ * The SDK no longer dictates notification channels - instead, it provides:
+ * - Alert severity level (CRITICAL, HIGH, MEDIUM, LOW)
+ * - Complete alert information
+ * - Developer decides routing based on severity
+ * 
+ * This example demonstrates:
+ * - Different handling for different severity levels
+ * - Flexibility to add multiple channels for critical alerts
+ * - Clean separation of concerns
+ */
 
 // Private keys from environment variables
 const pksInfo = {
@@ -129,26 +145,79 @@ function getSeverityEmoji(severity: string): string {
     }
 }
 
-// Create alert notification callback
-const alertNotificationCallback = createSimpleNotificationCallback({
-    [NotificationChannel.SLACK]: async (notification: AlertNotification) => {
-        const { alert, rule, context } = notification;
+// Create alert notification callback that handles notifications based on severity
+// The SDK no longer dictates channels - developers have full control based on severity
+const alertNotificationCallback: AlertNotificationCallback = async (notification: AlertNotification) => {
+    const { alert, rule, context } = notification;
+    
+    console.log(`🚨 ALERT TRIGGERED: [${alert.severity}] ${alert.title}`);
+    
+    // Handle notifications based on severity level
+    switch (alert.severity) {
+        case 'CRITICAL':
+            // For critical alerts: Send to Slack and could add more channels
+            await handleCriticalAlert(alert, rule, context);
+            break;
         
-        console.log(`🚨 ALERT TRIGGERED: [${alert.severity}] ${alert.title}`);
+        case 'HIGH':
+            // For high alerts: Send to Slack (could add email here)
+            await handleHighAlert(alert, rule, context);
+            break;
         
-        // Format alert message for Slack
-        const slackMessage = formatAlertForSlack(alert, rule, context);
-        
-        // Send to Slack
-        const success = await sendSlackMessage(slackMessage, alert.severity);
-        
-        if (success) {
-            console.log('✅ Alert sent to Slack successfully');
-        } else {
-            console.log('❌ Failed to send alert to Slack');
-        }
+        case 'MEDIUM':
+        case 'LOW':
+        default:
+            // For medium/low alerts: Just Slack
+            await handleStandardAlert(alert, rule, context);
+            break;
     }
-});
+};
+
+// Helper functions to handle different severity levels
+async function handleCriticalAlert(alert: any, rule: any, context: any) {
+    console.log('🚨 CRITICAL ALERT - Sending to all available channels');
+    
+    const slackMessage = formatAlertForSlack(alert, rule, context);
+    const success = await sendSlackMessage(slackMessage, alert.severity);
+    
+    if (success) {
+        console.log('✅ Critical alert sent to Slack successfully');
+    } else {
+        console.log('❌ Failed to send critical alert to Slack');
+    }
+    
+    // In a real implementation, you might also:
+    // - Send SMS to on-call engineer
+    // - Send email to multiple recipients
+    // - Create PagerDuty incident
+    // - Send to multiple Slack channels
+}
+
+async function handleHighAlert(alert: any, rule: any, context: any) {
+    console.log('⚠️  HIGH ALERT - Sending to primary channels');
+    
+    const slackMessage = formatAlertForSlack(alert, rule, context);
+    const success = await sendSlackMessage(slackMessage, alert.severity);
+    
+    if (success) {
+        console.log('✅ High alert sent to Slack successfully');
+    } else {
+        console.log('❌ Failed to send high alert to Slack');
+    }
+    
+    // Could also send email here for high severity
+}
+
+async function handleStandardAlert(alert: any, rule: any, context: any) {
+    const slackMessage = formatAlertForSlack(alert, rule, context);
+    const success = await sendSlackMessage(slackMessage, alert.severity);
+    
+    if (success) {
+        console.log('✅ Alert sent to Slack successfully');
+    } else {
+        console.log('❌ Failed to send alert to Slack');
+    }
+};
 
 function formatAlertForSlack(alert: any, rule: any, context: any): string {
     const timestamp = alert.timestamp.toISOString();

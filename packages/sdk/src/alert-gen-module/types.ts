@@ -70,7 +70,7 @@ export interface AlertRule {
     severity: AlertSeverity;
     enabled: boolean;
     conditions: AlertRuleCondition[];
-    channels: NotificationChannel[];
+    channels?: NotificationChannel[]; // Optional - let developers decide
     cooldownMs: number; // Minimum time between alerts of the same rule
     metadata?: Record<string, unknown>;
 }
@@ -80,7 +80,7 @@ export interface AlertNotification {
     alert: Alert;
     rule: AlertRule;
     context: AlertContext;
-    channels: NotificationChannel[];
+    channels?: NotificationChannel[]; // Optional - let developers decide based on severity
 }
 
 // Notification callback function type

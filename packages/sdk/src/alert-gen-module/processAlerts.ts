@@ -177,6 +177,10 @@ function generateAlertMessage(rule: AlertRule, context: AlertContext): string {
             if (typeof actualValue === 'number') {
                 const unit = getUnitForField(condition.field);
                 message += ` Current ${fieldName}: ${formatValue(actualValue, unit)}.`;
+            } else if (Array.isArray(actualValue)) {
+                message += ` Current ${fieldName}: ${formatArrayValue(actualValue, condition.field)}.`;
+            } else if (typeof actualValue === 'object' && actualValue !== null) {
+                message += ` Current ${fieldName}: ${formatObjectValue(actualValue as Record<string, unknown>, condition.field)}.`;
             } else {
                 message += ` Current ${fieldName}: ${String(actualValue)}.`;
             }
@@ -253,6 +257,49 @@ function formatValue(value: number, unit: string): string {
     }
 }
 
+function formatArrayValue(value: unknown[], field: string): string {
+    if (value.length === 0) {
+        return 'none';
+    }
+    
+    // Handle health alerts specifically
+    if (field.includes('alerts') && value.length > 0 && typeof value[0] === 'object') {
+        const alerts = value as Array<{ type?: string; level?: string; message?: string; count?: number }>;
+        return alerts.map(alert => {
+            if (alert.type && alert.level) {
+                return `${alert.level}: ${alert.type}${alert.count ? ` (${alert.count})` : ''}`;
+            } else if (alert.type) {
+                return alert.type;
+            }
+            return 'Unknown alert';
+        }).join(', ');
+    }
+    
+    // For other arrays, show count and first few items
+    if (value.length <= 3) {
+        return value.map(item => String(item)).join(', ');
+    } else {
+        return `${value.length} items: ${value.slice(0, 2).map(item => String(item)).join(', ')}, ...`;
+    }
+}
+
+function formatObjectValue(value: Record<string, unknown>, field: string): string {
+    // Handle specific object types based on field
+    if (field.includes('error') && 'message' in value) {
+        return String(value.message);
+    }
+    
+    // For general objects, show key count or main properties
+    const keys = Object.keys(value);
+    if (keys.length === 0) {
+        return 'empty';
+    } else if (keys.length <= 3) {
+        return keys.map(key => `${key}: ${String(value[key])}`).join(', ');
+    } else {
+        return `${keys.length} properties`;
+    }
+}
+
 // Rule evaluation
 export function evaluateRule(rule: AlertRule, context: AlertContext): AlertRuleEvaluationResult {
     // Check cooldown first
@@ -319,8 +366,7 @@ export async function processAlerts(
             await sendNotification({
                 alert: evaluationResult.alert,
                 rule,
-                context,
-                channels: rule.channels
+                context
             }, notificationCallback);
         }
     }
@@ -385,15 +431,29 @@ export function createSimpleNotificationCallback(
     return async (notification: AlertNotification) => {
         const promises: Promise<void>[] = [];
 
-        for (const channel of notification.channels) {
-            const callback = callbacks[channel];
-            if (callback) {
-                const result = callback(notification);
-                if (result instanceof Promise) {
-                    promises.push(result);
+        // If channels are specified, use them
+        if (notification.channels && notification.channels.length > 0) {
+            for (const channel of notification.channels) {
+                const callback = callbacks[channel];
+                if (callback) {
+                    const result = callback(notification);
+                    if (result instanceof Promise) {
+                        promises.push(result);
+                    }
+                } else {
+                    console.warn(`⚠️  No callback configured for notification channel: ${channel}. Skipping...`);
                 }
-            } else {
-                console.warn(`No callback configured for notification channel: ${channel}`);
+            }
+        } else {
+            // If no channels specified, call all available callbacks
+            // This allows developers to handle notification routing based on severity inside their callbacks
+            for (const [channel, callback] of Object.entries(callbacks)) {
+                if (callback) {
+                    const result = callback(notification);
+                    if (result instanceof Promise) {
+                        promises.push(result);
+                    }
+                }
             }
         }
 

@@ -36,7 +36,13 @@ export type WaitForRelayedMessageResult = WaitForRelayedMessageSuccessResult | W
 
 export async function waitForRelayedMessage(chainsInfo: ChainsInfo, expectedSender: string, expectedMessagePayload: `0x${string}`) : Promise<WaitForRelayedMessageResult> {
     try {
+
         return new Promise(async (resolve) => {
+            console.log("waitForRelayedMessage...");
+            console.log("chainsInfo.chainDestination.l2CrossDomainMessenger", chainsInfo.chainDestination.l2CrossDomainMessenger);
+            console.log("expectedSender", expectedSender);
+
+
             console.log("\n=== 🔍 Waiting for Relayed Message ===");
 
             const publicDestination = createPublicClient({
@@ -46,8 +52,16 @@ export async function waitForRelayedMessage(chainsInfo: ChainsInfo, expectedSend
 
             // Setup 15-minute timeout
             const timeoutMs = 15 * 60 * 1000; // 15 minutes
+            let unwatch: (() => void) | null = null;
+            
             const timeoutId = setTimeout(() => {
-                unwatch();
+                if (unwatch) {
+                    try {
+                        unwatch();
+                    } catch (error) {
+                        console.warn('Warning: Error stopping event watcher during timeout:', error);
+                    }
+                }
                 resolve({
                     status: WaitForRelayedMessageResultStatus.FAILED_TIMEOUT,
                     error: {
@@ -65,10 +79,11 @@ export async function waitForRelayedMessage(chainsInfo: ChainsInfo, expectedSend
                 });
             }, timeoutMs);
         
-            const unwatch = publicDestination.watchContractEvent({
-                address: chainsInfo.chainDestination.l2CrossDomainMessenger,
-                abi: l2ToL2CrossDomainMessengerAbi,
-                eventName: 'RelayedMessage',
+            try {
+                unwatch = publicDestination.watchContractEvent({
+                    address: chainsInfo.chainDestination.l2CrossDomainMessenger,
+                    abi: l2ToL2CrossDomainMessengerAbi,
+                    eventName: 'RelayedMessage',
                 onLogs: async (logs: Log[]) => {
                     try {
                         const logsParsed = parseEventLogs({
@@ -117,8 +132,14 @@ export async function waitForRelayedMessage(chainsInfo: ChainsInfo, expectedSend
                                     transactionHash: logsParsed[0].transactionHash
                                 };
 
-                                clearTimeout(timeoutId);
-                                unwatch();
+                            clearTimeout(timeoutId);
+                            if (unwatch) {
+                                try {
+                                    unwatch();
+                                } catch (error) {
+                                    console.warn('Warning: Error stopping event watcher:', error);
+                                }
+                            }
                                 resolve({
                                     status: WaitForRelayedMessageResultStatus.SUCCESS,
                                     data: {
@@ -129,8 +150,14 @@ export async function waitForRelayedMessage(chainsInfo: ChainsInfo, expectedSend
                                     }
                                 });
                             } catch (error) {
-                                clearTimeout(timeoutId);
-                                unwatch();
+                            clearTimeout(timeoutId);
+                            if (unwatch) {
+                                try {
+                                    unwatch();
+                                } catch (error) {
+                                    console.warn('Warning: Error stopping event watcher:', error);
+                                }
+                            }
                                 resolve({
                                     status: WaitForRelayedMessageResultStatus.FAILED_TRANSACTION_INFO,
                                     error: {
@@ -149,8 +176,15 @@ export async function waitForRelayedMessage(chainsInfo: ChainsInfo, expectedSend
                             }
                         }
                     } catch (error) {
-                        clearTimeout(timeoutId);
-                        unwatch();
+                        console.error("❌ Error parsing RelayedMessage event:", error);
+                            clearTimeout(timeoutId);
+                            if (unwatch) {
+                                try {
+                                    unwatch();
+                                } catch (error) {
+                                    console.warn('Warning: Error stopping event watcher:', error);
+                                }
+                            }
                         resolve({
                             status: WaitForRelayedMessageResultStatus.FAILED_WATCH_ERROR,
                             error: {
@@ -170,8 +204,14 @@ export async function waitForRelayedMessage(chainsInfo: ChainsInfo, expectedSend
                 },
                 onError: (error: Error) => {
                     console.error("❌ Error watching for RelayedMessage events:", error);
-                    clearTimeout(timeoutId);
-                    unwatch();
+                            clearTimeout(timeoutId);
+                            if (unwatch) {
+                                try {
+                                    unwatch();
+                                } catch (error) {
+                                    console.warn('Warning: Error stopping event watcher:', error);
+                                }
+                            }
                     resolve({
                         status: WaitForRelayedMessageResultStatus.FAILED_WATCH_ERROR,
                         error: {
@@ -189,6 +229,26 @@ export async function waitForRelayedMessage(chainsInfo: ChainsInfo, expectedSend
                     });
                 }
             });
+            } catch (watchError) {
+                // Handle errors when setting up the event watcher
+                console.error("❌ Error setting up event watcher:", watchError);
+                clearTimeout(timeoutId);
+                resolve({
+                    status: WaitForRelayedMessageResultStatus.FAILED_WATCH_ERROR,
+                    error: {
+                        message: `Failed to setup event watcher: ${watchError instanceof Error ? watchError.message : String(watchError)}`,
+                        context: {
+                            expectedSender,
+                            expectedMessagePayload,
+                            destinationChain: chainsInfo.chainDestination.chainId,
+                            l2CrossDomainMessenger: chainsInfo.chainDestination.l2CrossDomainMessenger,
+                            errorType: watchError?.constructor?.name || 'Unknown',
+                            rpcUrl: chainsInfo.chainDestination.rpcUrl
+                        },
+                        timestamp: new Date()
+                    }
+                });
+            }
         });
     } catch (error) {
         // Captura cualquier error inesperado que no hayamos contemplado

@@ -169,21 +169,6 @@ export const ALERT_RULE_TEMPLATES: AlertRuleTemplate[] = [
     }
 ];
 
-// Helper function to get default notification channels based on severity
-function getDefaultChannelsForSeverity(severity: AlertSeverity): NotificationChannel[] {
-    switch (severity) {
-        case AlertSeverity.CRITICAL:
-            return [NotificationChannel.EMAIL, NotificationChannel.SLACK, NotificationChannel.SMS];
-        case AlertSeverity.HIGH:
-            return [NotificationChannel.EMAIL, NotificationChannel.SLACK];
-        case AlertSeverity.MEDIUM:
-            return [NotificationChannel.SLACK];
-        case AlertSeverity.LOW:
-            return [NotificationChannel.SLACK];
-        default:
-            return [NotificationChannel.SLACK];
-    }
-}
 
 // Helper function to get cooldown period based on severity
 function getCooldownForSeverity(severity: AlertSeverity): number {
@@ -213,7 +198,6 @@ export const DEFAULT_ALERT_RULES: AlertRule[] = ALERT_RULE_TEMPLATES.map((templa
         ...condition,
         value: template.defaultValues.value
     })) as AlertRuleCondition[],
-    channels: getDefaultChannelsForSeverity(template.severity),
     cooldownMs: getCooldownForSeverity(template.severity),
     metadata: {
         template: template.name,
@@ -310,7 +294,6 @@ export function createRuleFromTemplate(
             ...condition,
             value: values[condition.field.split('.').pop() || 'value'] || values.value
         })) as AlertRuleCondition[],
-        channels: getDefaultChannelsForSeverity(template.severity),
         cooldownMs: getCooldownForSeverity(template.severity),
         metadata: {
             template: template.name,
@@ -340,7 +323,7 @@ export function createAlertRule(config: {
         severity: config.severity,
         enabled: config.enabled ?? true,
         conditions: config.conditions,
-        channels: config.channels ?? getDefaultChannelsForSeverity(config.severity),
+        ...(config.channels && { channels: config.channels }),
         cooldownMs: config.cooldownMs ?? getCooldownForSeverity(config.severity),
         metadata: config.metadata ?? {}
     };
