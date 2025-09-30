@@ -38,11 +38,6 @@ export async function waitForRelayedMessage(chainsInfo: ChainsInfo, expectedSend
     try {
 
         return new Promise(async (resolve) => {
-            console.log("waitForRelayedMessage...");
-            console.log("chainsInfo.chainDestination.l2CrossDomainMessenger", chainsInfo.chainDestination.l2CrossDomainMessenger);
-            console.log("expectedSender", expectedSender);
-
-
             console.log("\n=== 🔍 Waiting for Relayed Message ===");
 
             const publicDestination = createPublicClient({
@@ -111,6 +106,7 @@ export async function waitForRelayedMessage(chainsInfo: ChainsInfo, expectedSend
                         if (messageHash.toLowerCase() === expectedMessageHash.toLowerCase()) {
                             console.log("\n📨 RelayedMessage event received:");
                             console.log("   - Source Chain ID:", source.toString());
+                            console.log("   - Relayed Tx Hash:", relayedMessage.transactionHash);
                             console.log("   - Message Nonce:", messageNonce.toString());
                             console.log("   - Message Hash:", messageHash);
 
