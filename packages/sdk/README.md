@@ -4,7 +4,7 @@
 
 The project implements a synthetic "ping" system that uses the canonical L2CrossDomainMessenger to send lightweight messages between chains and measure whether delivery succeeded, failed, or timed out, along with precise latency information. By relying solely on the canonical OP Stack messenger and leveraging viem + @eth-optimism/viem, the tool ensures deterministic and reliable measurements that serve as the foundation for real-time alerts, enabling developers and operators to detect issues early and gain clear visibility into cross-chain communication health across the Superchain.
 
-For detailed technical information and implementation details, see the [Technical Research](./technical-research.md) document.
+For detailed technical information and implementation details, see the [Technical Research](https://github.com/wakeuplabs-io/op-interop-alerts/blob/9e58338e84c7d25182a89c3c39cc5368cd877f22/technical-research.md) document.
 
 ## Installation
 
